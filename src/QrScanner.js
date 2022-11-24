@@ -12,18 +12,16 @@ export default function QrScanner(props) {
         console.error(err);
     };
     return (
-        <div className="popup-box">
-            <div className="box">
-                <span className="close-icon" onClick={props.handleClose}>
-                    x
-                </span>
-                <QrReader
-                    delay={300}
-                    onError={handleError}
-                    onScan={handleScan}
-                    style={{ width: "100%" }}
-                />
-            </div>
+        <div className="box">
+            <span className="close-icon" onClick={props.handleClose}>
+                x
+            </span>
+            <QrReader
+                delay={300}
+                onError={handleError}
+                onScan={handleScan}
+                style={{ width: "100%" }}
+            />
         </div>
     );
 }

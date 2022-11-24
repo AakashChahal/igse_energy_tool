@@ -36,3 +36,28 @@
         transform: rotate(360deg);
     }
 }
+
+/* QR Scanner Style */
+.box {
+    position: relative;
+    width: 70%;
+    margin: 1rem auto;
+    height: auto;
+    max-height: 70vh;
+    background: #fff;
+    border-radius: 4px;
+    padding: 20px;
+    border: 1px solid #999;
+    overflow: auto;
+}
+
+.close-icon {
+    cursor: pointer;
+    display: inline-block;
+    position: absolute;
+    right: 5px;
+    top: -5px;
+    padding: 5px;
+    /* border-radius: 50%; */
+    /* background: #eeffdd; */
+}
