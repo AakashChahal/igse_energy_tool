@@ -1,17 +1,22 @@
 import * as React from "react";
-import Avatar from "@mui/material/Avatar";
-import Button from "@mui/material/Button";
-import CssBaseline from "@mui/material/CssBaseline";
-import TextField from "@mui/material/TextField";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
-import Link from "@mui/material/Link";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import Typography from "@mui/material/Typography";
+import {
+    Avatar,
+    Button,
+    CssBaseline,
+    TextField,
+    Select,
+    MenuItem,
+    InputLabel,
+    FormControl,
+    Link,
+    Paper,
+    Box,
+    Grid,
+    Typography,
+} from "@mui/material";
+import { LockPerson, QrCodeScanner } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import QrScanner from "./QrScanner";
 
 function Copyright(props) {
     return (
@@ -37,7 +42,13 @@ function Copyright(props) {
 
 const theme = createTheme();
 
+const handleChange = (event) => {
+    console.log(event.target.value);
+};
+
 export default function SignIn() {
+    const [isQrClicked, setQrClicked] = React.useState(false);
+
     const handleSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -45,6 +56,16 @@ export default function SignIn() {
             email: data.get("email"),
             password: data.get("password"),
         });
+    };
+
+    const toggleScanner = () => {
+        setQrClicked(!isQrClicked);
+    };
+
+    const setQrData = (data) => {
+        document.getElementById("evc").focus();
+        document.getElementById("evc").value = data;
+        document.getElementById("evc").blur();
     };
 
     return (
@@ -87,7 +108,7 @@ export default function SignIn() {
                         }}
                     >
                         <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-                            <LockOutlinedIcon />
+                            <LockPerson />
                         </Avatar>
                         <Typography component="h1" variant="h5">
                             Register
@@ -96,7 +117,7 @@ export default function SignIn() {
                             component="form"
                             noValidate
                             onSubmit={handleSubmit}
-                            sx={{ mt: 1 }}
+                            sx={{ mt: 5 }}
                         >
                             <Grid container spacing={2}>
                                 <Grid item xs={12} sm={6}>
@@ -125,7 +146,7 @@ export default function SignIn() {
                                         required
                                         fullWidth
                                         id="email"
-                                        label="Email Address"
+                                        label="Customer ID (Email Address)"
                                         name="email"
                                         autoComplete="email"
                                     />
@@ -142,6 +163,82 @@ export default function SignIn() {
                                     />
                                 </Grid>
                                 <Grid item xs={12}>
+                                    <FormControl fullWidth>
+                                        <InputLabel id="property-type">
+                                            Property Type
+                                        </InputLabel>
+                                        <Select
+                                            labelId="property-type"
+                                            id="property"
+                                            value={""}
+                                            label="Property Type"
+                                            onChange={handleChange}
+                                        >
+                                            <MenuItem value={"detached"}>
+                                                Detached
+                                            </MenuItem>
+                                            <MenuItem value={"sem-detached"}>
+                                                Semi-Detached
+                                            </MenuItem>
+                                            <MenuItem value={"terraced"}>
+                                                Terraced
+                                            </MenuItem>
+                                            <MenuItem value={"flat"}>
+                                                Flat
+                                            </MenuItem>
+                                            <MenuItem value={"cottage"}>
+                                                Cottage
+                                            </MenuItem>
+                                            <MenuItem value={"bungalow"}>
+                                                Bungalow
+                                            </MenuItem>
+                                            <MenuItem value={"mansion"}>
+                                                Mansion
+                                            </MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        required
+                                        fullWidth
+                                        id="address"
+                                        label="Address"
+                                        name="address"
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        required
+                                        fullWidth
+                                        id="numBedrooms"
+                                        label="Number of Bedrooms"
+                                        name="numBedrooms"
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        required
+                                        id="evc"
+                                        label="8 digits EVC"
+                                        name="evc"
+                                    />{" "}
+                                    <QrCodeScanner
+                                        sx={{
+                                            marginTop: "15px",
+                                            marginBottom: "5px",
+                                            cursor: "pointer",
+                                        }}
+                                        onClick={toggleScanner}
+                                    />
+                                    {isQrClicked && (
+                                        <QrScanner
+                                            handleClose={toggleScanner}
+                                            setQrData={setQrData}
+                                        />
+                                    )}
+                                </Grid>
+                                {/* <Grid item xs={12}>
                                     <FormControlLabel
                                         control={
                                             <Checkbox
@@ -151,7 +248,7 @@ export default function SignIn() {
                                         }
                                         label="I want to receive inspiration, marketing promotions and updates via email."
                                     />
-                                </Grid>
+                                </Grid> */}
                             </Grid>
                             <Button
                                 type="submit"
@@ -159,7 +256,7 @@ export default function SignIn() {
                                 variant="contained"
                                 sx={{ mt: 3, mb: 2 }}
                             >
-                                Sign Up
+                                Register
                             </Button>
                             <Grid container justifyContent="flex-end">
                                 <Grid item>
