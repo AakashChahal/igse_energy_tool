@@ -63,9 +63,12 @@ export default function SignIn() {
     };
 
     const setQrData = (data) => {
-        document.getElementById("evc").focus();
         document.getElementById("evc").value = data;
-        document.getElementById("evc").blur();
+        document.getElementById("evc").focus();
+        // document.getElementById("evc-label").dataset.shrink = true;
+        // document
+        //     .getElementById("evc-label")
+        //     .classList.add("MuiInputLabel-shrink");
     };
 
     return (

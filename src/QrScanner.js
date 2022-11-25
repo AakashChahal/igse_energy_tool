@@ -8,9 +8,11 @@ export default function QrScanner(props) {
             props.handleClose();
         }
     };
+
     const handleError = (err) => {
         console.error(err);
     };
+
     return (
         <div className="box">
             <span className="close-icon" onClick={props.handleClose}>
