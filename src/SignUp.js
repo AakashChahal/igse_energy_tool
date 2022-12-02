@@ -222,8 +222,8 @@ export default function SignIn() {
                                         label="8 digits EVC"
                                         name="evc"
                                         InputLabelProps={
-                                            document.getElementById("evc").value
-                                                .length > 0
+                                            document.getElementById("evc")
+                                                ?.value?.length > 0
                                                 ? { shrink: true }
                                                 : {}
                                         }
