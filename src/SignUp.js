@@ -65,10 +65,6 @@ export default function SignIn() {
     const setQrData = (data) => {
         document.getElementById("evc").value = data;
         document.getElementById("evc").focus();
-        // document.getElementById("evc-label").dataset.shrink = true;
-        // document
-        //     .getElementById("evc-label")
-        //     .classList.add("MuiInputLabel-shrink");
     };
 
     return (
@@ -225,6 +221,12 @@ export default function SignIn() {
                                         id="evc"
                                         label="8 digits EVC"
                                         name="evc"
+                                        InputLabelProps={
+                                            document.getElementById("evc").value
+                                                .length > 0
+                                                ? { shrink: true }
+                                                : {}
+                                        }
                                     />{" "}
                                     <QrCodeScanner
                                         sx={{
