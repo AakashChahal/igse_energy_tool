@@ -161,6 +161,9 @@ export default function SignIn() {
                     </Box>
                 </Grid>
             </Grid>
+            <form action="#" method="post">
+                <button type="submit">Submit</button>
+            </form>
         </ThemeProvider>
     );
 }
