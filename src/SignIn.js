@@ -47,6 +47,25 @@ export default function SignIn() {
             email: data.get("email"),
             password: data.get("password"),
         });
+        fetch("http://localhost:8080/login", {
+            method: "POST",
+            body: {
+                email: data.get("email"),
+                password: data.get("password"),
+            },
+        })
+            .then((res) => {
+                if (res.status === 200) {
+                    console.log("login successful");
+                } else {
+                    console.log("login failed");
+                }
+            })
+            .catch((err) => {
+                console.error("error occured: ", err);
+            });
+        // eslint-disable-next-line no-console
+        console.info("You clicked submit.");
     };
 
     return (

@@ -56,6 +56,23 @@ export default function SignIn() {
             email: data.get("email"),
             password: data.get("password"),
         });
+        fetch("http://localhost:8080/register", {
+            method: "POST",
+            body: {
+                email: data.get("email"),
+                password: data.get("password"),
+            },
+        })
+            .then((res) => {
+                if (res.status === 200) {
+                    console.log("Registeration successful");
+                } else {
+                    console.log("Registration failed");
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     };
 
     const toggleScanner = () => {
