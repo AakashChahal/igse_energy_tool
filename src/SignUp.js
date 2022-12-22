@@ -42,26 +42,28 @@ function Copyright(props) {
 
 const theme = createTheme();
 
-const handleChange = (event) => {
-    console.log(event.target.value);
-};
-
 export default function SignIn() {
     const [isQrClicked, setQrClicked] = React.useState(false);
+    const [propertyType, setPropertyType] = React.useState("");
 
     const handleSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get("email"),
-            password: data.get("password"),
-        });
         fetch("http://localhost:8080/register", {
             method: "POST",
-            body: {
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                firstName: data.get("firstName"),
+                lastName: data.get("lastName"),
                 email: data.get("email"),
                 password: data.get("password"),
-            },
+                propertyType,
+                address: data.get("address"),
+                numBedrooms: data.get("numBedrooms"),
+                evc: data.get("evc"),
+            }),
         })
             .then((res) => {
                 if (res.status === 200) {
@@ -186,14 +188,18 @@ export default function SignIn() {
                                         <Select
                                             labelId="property-type"
                                             id="property"
-                                            value={""}
+                                            value={propertyType}
                                             label="Property Type"
-                                            onChange={handleChange}
+                                            onChange={(event) => {
+                                                setPropertyType(
+                                                    event.target.value
+                                                );
+                                            }}
                                         >
                                             <MenuItem value={"detached"}>
                                                 Detached
                                             </MenuItem>
-                                            <MenuItem value={"sem-detached"}>
+                                            <MenuItem value={"semi-detached"}>
                                                 Semi-Detached
                                             </MenuItem>
                                             <MenuItem value={"terraced"}>
