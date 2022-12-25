@@ -7,8 +7,8 @@ import {
     Button,
     CssBaseline,
     Typography,
+    Box,
 } from "@mui/material";
-import { Box } from "@mui/system";
 
 const theme = createTheme((theme) => ({
     root: {

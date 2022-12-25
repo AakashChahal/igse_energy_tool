@@ -4,6 +4,8 @@ import SignIn from "./SignIn";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignUp from "./SignUp";
 import { useEffect } from "react";
+import Dashboard from "./Dashboard";
+import ForgotPassword from "./ForgotPassword";
 
 function App() {
     useEffect(() => {
@@ -25,6 +27,8 @@ function App() {
                 <Route path="/" element={<SignIn />} />
                 <Route path="/login" element={<SignIn />} />
                 <Route path="/register" element={<SignUp />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/forgot" element={<ForgotPassword />} />
             </Routes>
         </Router>
     );

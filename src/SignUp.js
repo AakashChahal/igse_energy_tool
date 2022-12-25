@@ -46,9 +46,20 @@ export default function SignIn() {
     const [isQrClicked, setQrClicked] = React.useState(false);
     const [propertyType, setPropertyType] = React.useState("");
 
-    const handleSubmit = (event) => {
+    const getHashedPassword = async (password) => {
+        const hash = await window.crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(password)
+        );
+        return Array.from(new Uint8Array(hash))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+    };
+
+    const handleSubmit = async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
+        const password = await getHashedPassword(data.get("password"));
         fetch("http://localhost:8080/register", {
             method: "POST",
             headers: {
@@ -58,7 +69,7 @@ export default function SignIn() {
                 firstName: data.get("firstName"),
                 lastName: data.get("lastName"),
                 email: data.get("email"),
-                password: data.get("password"),
+                password,
                 propertyType,
                 address: data.get("address"),
                 numBedrooms: data.get("numBedrooms"),
@@ -68,6 +79,7 @@ export default function SignIn() {
             .then((res) => {
                 if (res.status === 200) {
                     console.log("Registeration successful");
+                    window.location.href = "/dashboard";
                 } else {
                     console.log("Registration failed");
                 }

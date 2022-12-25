@@ -11,9 +11,14 @@ import {
     Box,
     Grid,
     Typography,
+    Alert,
+    IconButton,
+    Collapse,
 } from "@mui/material";
 import { LockPerson } from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { useState } from "react";
 
 function Copyright(props) {
     return (
@@ -40,32 +45,53 @@ function Copyright(props) {
 const theme = createTheme();
 
 export default function SignIn() {
-    const handleSubmit = (event) => {
+    const [errorLogin, setErrorLogin] = useState(false);
+    const [successLogin, setSuccessLogin] = useState(false);
+    const [open, setOpen] = useState(true);
+
+    const getHashedPassword = async (password) => {
+        const hash = await window.crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(password)
+        );
+        return Array.from(new Uint8Array(hash))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+    };
+
+    const handleSubmit = async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get("email"),
-            password: data.get("password"),
-        });
+        const password = await getHashedPassword(data.get("password"));
+        console.log("password: ", password);
         fetch("http://localhost:8080/login", {
             method: "POST",
-            body: {
-                email: data.get("email"),
-                password: data.get("password"),
+            headers: {
+                "Content-Type": "application/json",
             },
+            body: JSON.stringify({
+                email: data.get("email"),
+                password,
+            }),
         })
             .then((res) => {
+                console.log("response: ", res);
                 if (res.status === 200) {
                     console.log("login successful");
+                    setErrorLogin(false);
+                    setSuccessLogin(true);
+                    setOpen(true);
+                    window.location.href = "/dashboard";
                 } else {
                     console.log("login failed");
+                    setErrorLogin(true);
+                    setSuccessLogin(false);
+                    setOpen(true);
                 }
             })
             .catch((err) => {
                 console.error("error occured: ", err);
             });
-        // eslint-disable-next-line no-console
-        console.info("You clicked submit.");
     };
 
     return (
@@ -113,12 +139,55 @@ export default function SignIn() {
                         <Typography component="h1" variant="h5">
                             Sign in
                         </Typography>
+
                         <Box
                             component="form"
                             noValidate
                             onSubmit={handleSubmit}
                             sx={{ mt: 5 }}
                         >
+                            {errorLogin && (
+                                <Collapse in={open}>
+                                    <Alert
+                                        severity="error"
+                                        action={
+                                            <IconButton
+                                                aria-label="close"
+                                                color="inherit"
+                                                size="small"
+                                                onClick={() => {
+                                                    setOpen(false);
+                                                }}
+                                            >
+                                                <CloseIcon fontSize="inherit" />
+                                            </IconButton>
+                                        }
+                                    >
+                                        Login failed, please try again
+                                    </Alert>
+                                </Collapse>
+                            )}
+                            {successLogin && (
+                                <Collapse in={open}>
+                                    <Alert
+                                        severity="success"
+                                        action={
+                                            <IconButton
+                                                aria-label="close"
+                                                color="inherit"
+                                                size="small"
+                                                onClick={() => {
+                                                    setOpen(false);
+                                                }}
+                                            >
+                                                <CloseIcon fontSize="inherit" />
+                                            </IconButton>
+                                        }
+                                    >
+                                        Login successful
+                                    </Alert>
+                                </Collapse>
+                            )}
                             <TextField
                                 margin="normal"
                                 required
@@ -165,7 +234,7 @@ export default function SignIn() {
                                 }}
                             >
                                 <Grid item>
-                                    <Link href="#" variant="body2">
+                                    <Link href="/forgot" variant="body2">
                                         Forgot password?
                                     </Link>
                                 </Grid>
