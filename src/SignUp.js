@@ -17,6 +17,7 @@ import {
 import { LockPerson, QrCodeScanner } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import QrScanner from "./QrScanner";
+import Navbar from "./Navbar";
 
 function Copyright(props) {
     return (
