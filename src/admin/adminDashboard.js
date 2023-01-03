@@ -39,7 +39,8 @@ const theme = createTheme((theme) => ({
     },
 }));
 
-export let visData = [["type", "reading"]];
+export let consumptionData = [["type", "reading"]];
+export let readingsData = [[], []];
 export const chartOptions = {
     title: "Meter Readings",
     is3D: true,
@@ -65,6 +66,15 @@ function AdminHomePage() {
 
     const handleFetchMeterReadings = () => {
         // Fetch the meter readings from the server and set them in the state
+        if (data) {
+            for (const key in data.readings) {
+                for (const readings in data.readings[key][1]) {
+                    readingsData[0].push(readings);
+                    readingsData[1].push(data.readings[key][1][readings]);
+                }
+            }
+            console.log(readingsData);
+        }
     };
 
     const handleFetchStatistics = () => {
@@ -78,10 +88,13 @@ function AdminHomePage() {
                     key === "elec_reading_night" ||
                     key === "gas"
                 ) {
-                    visData.push([key, data.readings.aakash_second[1][key]]);
+                    consumptionData.push([
+                        key,
+                        data.readings.aakash_second[1][key],
+                    ]);
                 }
             }
-            console.log(visData);
+            console.log(consumptionData);
         }
     };
 
@@ -121,54 +134,14 @@ function AdminHomePage() {
                     Submit
                 </Button>
             </form>
-            <Button onClick={handleFetchMeterReadings}>
-                Fetch Meter Readings
-            </Button>
-            {meterReadings.length > 0 && (
-                <TableContainer
-                    component={Paper}
-                    className={theme.meterReadingTable}
-                >
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Submission Date</TableCell>
-                                <TableCell>Electricity (Day)</TableCell>
-                                <TableCell>Electricity (Night)</TableCell>
-                                <TableCell>Gas</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {meterReadings.map((reading) => (
-                                <TableRow key={reading.id}>
-                                    <TableCell>
-                                        {reading.submissionDate}
-                                    </TableCell>
-                                    <TableCell>
-                                        {reading.electricityMeterReadingDay}
-                                    </TableCell>
-                                    <TableCell>
-                                        {reading.electricityMeterReadingNight}
-                                    </TableCell>
-                                    <TableCell>
-                                        {reading.gasMeterReading}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
             <Button onClick={handleFetchStatistics}>Fetch Statistics</Button>
             {averageElectricityConsumption && (
-                <Chart
-                    chartType="PieChart"
-                    data={visData}
-                    width="100%"
-                    height="400px"
-                    options={chartOptions}
-                    legendToggle
-                />
+                <div className={theme.statisticsSection}>
+                    <p>Average Electricity Consumption:</p>
+                    <p className={theme.statisticsValue}>
+                        {averageElectricityConsumption}
+                    </p>
+                </div>
             )}
             {averageGasConsumption && (
                 <div className={theme.statisticsSection}>
@@ -177,6 +150,21 @@ function AdminHomePage() {
                         {averageGasConsumption}
                     </p>
                 </div>
+            )}
+            <Button onClick={handleFetchMeterReadings}>
+                Fetch Meter Readings
+            </Button>
+            {loading ? (
+                "loading"
+            ) : (
+                <Chart
+                    chartType="Table"
+                    data={readingsData}
+                    width="100%"
+                    height="400px"
+                    options={chartOptions}
+                    legendToggle
+                />
             )}
         </div>
     );

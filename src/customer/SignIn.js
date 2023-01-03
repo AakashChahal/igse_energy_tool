@@ -22,8 +22,8 @@ import { useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { Navigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import UserContext from "../userContext";
-import useFetch from "../hooks/useFetch";
+import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
 
 function Copyright(props) {
     return (
@@ -51,22 +51,55 @@ const theme = createTheme();
 
 export default function SignIn() {
     // eslint-disable-next-line
-    const user = React.useContext(UserContext);
-    // eslint-disable-next-line
     const navigate = useNavigate();
     // eslint-disable-next-line
     const [errorLogin, setErrorLogin] = useState(false);
     // eslint-disable-next-line
     const [successLogin, setSuccessLogin] = useState(false);
+
+    const [credentials, setCredentials] = useState({
+        customer_id: null,
+        password: null,
+    });
+
+    const { loading, error, dispatch } = React.useContext(AuthContext);
+
     const [open, setOpen] = useState(true);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+
         const data = new FormData(event.currentTarget);
         const password = data.get("password");
-    };
+        const customer_id = data.get("email");
 
-    const { data, loading, error, refetch } = useFetch("/api/tariff");
+        setCredentials((prev) => {
+            return {
+                ...prev,
+                customer_id,
+                password,
+            };
+        });
+
+        dispatch({ type: "LOGIN_START" });
+
+        try {
+            const res = await axios.post("/api/auth/login", {
+                customer_id,
+                password,
+            });
+            dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
+            setOpen(true);
+            setSuccessLogin(true);
+            setErrorLogin(false);
+            navigate("/dashboard");
+        } catch (error) {
+            dispatch({ type: "LOGIN_FAILURE", payload: error.response.data });
+            setOpen(true);
+            setErrorLogin(true);
+            setSuccessLogin(false);
+        }
+    };
 
     return (
         <ThemeProvider theme={theme}>
@@ -131,6 +164,8 @@ export default function SignIn() {
                                                 size="small"
                                                 onClick={() => {
                                                     setOpen(false);
+                                                    setErrorLogin(false);
+                                                    setSuccessLogin(false);
                                                 }}
                                             >
                                                 <CloseIcon fontSize="inherit" />
@@ -152,6 +187,8 @@ export default function SignIn() {
                                                 size="small"
                                                 onClick={() => {
                                                     setOpen(false);
+                                                    setErrorLogin(false);
+                                                    setSuccessLogin(false);
                                                 }}
                                             >
                                                 <CloseIcon fontSize="inherit" />

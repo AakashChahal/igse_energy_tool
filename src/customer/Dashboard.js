@@ -13,7 +13,7 @@ import {
 import Navbar from "./Navbar";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import UserContext from "../userContext";
+import { AuthContext } from "../context/AuthContext";
 
 const theme = createTheme((theme) => ({
     type: "dark",
@@ -52,8 +52,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 getAuth(firebaseApp);
 
 export default function Dashboard() {
-    // eslint-disable-next-line
-    const user = React.useContext(UserContext);
+    const { user } = React.useContext(AuthContext);
     const [submissionDate, setSubmissionDate] = React.useState(
         new Date().toISOString().substring(0, 10)
     );
@@ -184,7 +183,7 @@ export default function Dashboard() {
                             <Typography component="p">
                                 Credit Amount:{" "}
                                 <span className={theme.billPaymentAmount}>
-                                    {creditAmount}
+                                    £{user?.user?.balance}
                                 </span>
                             </Typography>
                             <Button

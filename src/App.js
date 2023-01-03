@@ -6,7 +6,7 @@ import SignUp from "./customer/SignUp";
 import { useState } from "react";
 import Dashboard from "./customer/Dashboard";
 import ForgotPassword from "./customer/ForgotPassword";
-import UserContext from "./userContext";
+import UserContext from "./context/userContext";
 import AdminSignIn from "./admin/AdminSignIn";
 import AdminHomePage from "./admin/adminDashboard";
 

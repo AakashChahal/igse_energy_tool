@@ -2,6 +2,7 @@ import React from "react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { AppBar, Toolbar, Typography, IconButton, Button } from "@mui/material";
 import { Menu } from "@mui/icons-material";
+import { AuthContext } from "../context/AuthContext";
 
 const theme = createTheme((theme) => ({
     root: {
@@ -16,22 +17,47 @@ const theme = createTheme((theme) => ({
 }));
 
 function Navbar() {
+    const { user } = React.useContext(AuthContext);
+
     return (
-        <ThemeProvider className={theme.root}>
+        <ThemeProvider theme={theme}>
             <AppBar position="fixed">
                 <Toolbar>
-                    <IconButton
+                    {/* <IconButton
                         edge="start"
                         className={theme.menuButton}
                         color="inherit"
                         aria-label="menu"
                     >
                         <Menu />
-                    </IconButton>
-                    <Typography variant="h6" className={theme.title}>
-                        App Name
+                    </IconButton> */}
+                    <Typography variant="h6">IGSE Home</Typography>
+
+                    <Typography
+                        sx={{
+                            color: "white",
+                            marginLeft: "auto",
+                        }}
+                        variant="h6"
+                    >
+                        Welcome to your Homepage:{" "}
+                        {user?.user?.customer_id
+                            .split("@")[0]
+                            .replace(/[.#$\\]/g, "_")}
                     </Typography>
-                    <Button color="inherit">Login</Button>
+
+                    <Button
+                        sx={{
+                            color: "white",
+                            "&:hover": {
+                                color: "white",
+                            },
+                            marginLeft: "auto",
+                        }}
+                        color="inherit"
+                    >
+                        Logout
+                    </Button>
                 </Toolbar>
             </AppBar>
         </ThemeProvider>

@@ -22,7 +22,7 @@ import { useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { Navigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import UserContext from "../userContext";
+import UserContext from "../context/userContext";
 import useFetch from "../hooks/useFetch";
 
 function Copyright(props) {
