@@ -17,7 +17,6 @@ import {
 import { LockPerson, QrCodeScanner } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import QrScanner from "./QrScanner";
-import Navbar from "./Navbar";
 
 function Copyright(props) {
     return (
@@ -47,47 +46,11 @@ export default function SignIn() {
     const [isQrClicked, setQrClicked] = React.useState(false);
     const [propertyType, setPropertyType] = React.useState("");
 
-    const getHashedPassword = async (password) => {
-        const hash = await window.crypto.subtle.digest(
-            "SHA-256",
-            new TextEncoder().encode(password)
-        );
-        return Array.from(new Uint8Array(hash))
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-    };
-
     const handleSubmit = async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        const password = await getHashedPassword(data.get("password"));
-        fetch("http://localhost:8080/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                firstName: data.get("firstName"),
-                lastName: data.get("lastName"),
-                email: data.get("email"),
-                password,
-                propertyType,
-                address: data.get("address"),
-                numBedrooms: data.get("numBedrooms"),
-                evc: data.get("evc"),
-            }),
-        })
-            .then((res) => {
-                if (res.status === 200) {
-                    console.log("Registeration successful");
-                    window.location.href = "/dashboard";
-                } else {
-                    console.log("Registration failed");
-                }
-            })
-            .catch((err) => {
-                console.log(err);
-            });
+        // eslint-disable-next-line
+        const password = data.get("password");
     };
 
     const toggleScanner = () => {
