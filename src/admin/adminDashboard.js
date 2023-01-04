@@ -3,16 +3,16 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import {
     TextField,
     Button,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
+    Typography,
+    FormControl,
+    Grid,
+    CssBaseline,
 } from "@mui/material";
 import useFetch from "../hooks/useFetch";
 import { Chart } from "react-google-charts";
+import { Navigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
 
 const theme = createTheme((theme) => ({
     root: {
@@ -57,7 +57,9 @@ function AdminHomePage() {
     const [averageGasConsumption, setAverageGasConsumption] =
         React.useState("");
 
-    const { data, error, loading, refetch } = useFetch("/api/reading");
+    const { user } = React.useContext(AuthContext);
+
+    const { data, dataError, dataLoading, refetch } = useFetch("/api/reading");
     // console.log(data);
     const handleSubmitPrices = (event) => {
         event.preventDefault();
@@ -98,75 +100,117 @@ function AdminHomePage() {
         }
     };
 
-    return (
-        <div>
-            <form
-                className={theme.priceSettingForm}
-                onSubmit={handleSubmitPrices}
-            >
-                <h2 className={theme.priceSettingFormTitle}>Set Prices</h2>
-                <TextField
-                    id="electricity-price-day"
-                    label="Electricity Price (Day)"
-                    type="number"
-                    value={electricityPriceDay}
-                    onChange={(event) =>
-                        setElectricityPriceDay(event.target.value)
-                    }
-                />
-                <TextField
-                    id="electricity-price-night"
-                    label="Electricity Price (Night)"
-                    type="number"
-                    value={electricityPriceNight}
-                    onChange={(event) =>
-                        setElectricityPriceNight(event.target.value)
-                    }
-                />
-                <TextField
-                    id="gas-price"
-                    label="Gas Price"
-                    type="number"
-                    value={gasPrice}
-                    onChange={(event) => setGasPrice(event.target.value)}
-                />
-                <Button type="submit" variant="contained" color="primary">
-                    Submit
-                </Button>
-            </form>
-            <Button onClick={handleFetchStatistics}>Fetch Statistics</Button>
-            {averageElectricityConsumption && (
-                <div className={theme.statisticsSection}>
-                    <p>Average Electricity Consumption:</p>
-                    <p className={theme.statisticsValue}>
-                        {averageElectricityConsumption}
-                    </p>
-                </div>
-            )}
-            {averageGasConsumption && (
-                <div className={theme.statisticsSection}>
-                    <p>Average Gas Consumption:</p>
-                    <p className={theme.statisticsValue}>
-                        {averageGasConsumption}
-                    </p>
-                </div>
-            )}
-            <Button onClick={handleFetchMeterReadings}>
-                Fetch Meter Readings
-            </Button>
-            {loading ? (
-                "loading"
-            ) : (
-                <Chart
-                    chartType="Table"
-                    data={readingsData}
-                    width="100%"
-                    height="400px"
-                    options={chartOptions}
-                    legendToggle
-                />
-            )}
-        </div>
+    return user && user.user.type === "admin" ? (
+        <ThemeProvider theme={theme}>
+            <Grid container component="main" sx={{ height: "100vh" }}>
+                <Navbar />
+                <CssBaseline />
+                <Grid
+                    item
+                    xs={12}
+                    sx={{
+                        alignItems: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        mt: "auto",
+                    }}
+                >
+                    <Grid item xs={12} component="form">
+                        <FormControl
+                            className={theme.priceSettingForm}
+                            onSubmit={handleSubmitPrices}
+                        >
+                            <Typography component={"h1"} variant={"h2"}>
+                                Set Prices
+                            </Typography>
+                            <TextField
+                                id="electricity-price-day"
+                                label="Electricity Price (Day)"
+                                type="number"
+                                value={electricityPriceDay}
+                                onChange={(event) =>
+                                    setElectricityPriceDay(event.target.value)
+                                }
+                            />
+                            <TextField
+                                id="electricity-price-night"
+                                label="Electricity Price (Night)"
+                                type="number"
+                                value={electricityPriceNight}
+                                onChange={(event) =>
+                                    setElectricityPriceNight(event.target.value)
+                                }
+                            />
+                            <TextField
+                                id="standing-charge"
+                                label="Standing Charge"
+                                type="number"
+                                value={electricityPriceNight}
+                                onChange={(event) =>
+                                    setElectricityPriceNight(event.target.value)
+                                }
+                            />
+                            <TextField
+                                id="gas-price"
+                                label="Gas Price"
+                                type="number"
+                                value={gasPrice}
+                                onChange={(event) =>
+                                    setGasPrice(event.target.value)
+                                }
+                            />
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                            >
+                                Submit
+                            </Button>
+                        </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <Button onClick={handleFetchStatistics}>
+                            Fetch Statistics
+                        </Button>
+                        {averageElectricityConsumption && (
+                            <div className={theme.statisticsSection}>
+                                <p>Average Electricity Consumption:</p>
+                                <p className={theme.statisticsValue}>
+                                    {averageElectricityConsumption}
+                                </p>
+                            </div>
+                        )}
+                        {averageGasConsumption && (
+                            <div className={theme.statisticsSection}>
+                                <p>Average Gas Consumption:</p>
+                                <p className={theme.statisticsValue}>
+                                    {averageGasConsumption}
+                                </p>
+                            </div>
+                        )}
+                        <Button onClick={handleFetchMeterReadings}>
+                            Fetch Meter Readings
+                        </Button>
+                        {dataLoading ? (
+                            "loading"
+                        ) : (
+                            <Chart
+                                chartType="Table"
+                                data={readingsData}
+                                width="100%"
+                                height="400px"
+                                options={chartOptions}
+                                legendToggle
+                            />
+                        )}
+                    </Grid>
+                </Grid>
+            </Grid>
+        </ThemeProvider>
+    ) : (
+        <Navigate to="/admin/login" />
     );
 }
 

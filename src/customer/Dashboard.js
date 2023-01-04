@@ -10,10 +10,11 @@ import {
     Typography,
     Box,
 } from "@mui/material";
-import Navbar from "./Navbar";
+import Navbar from "../components/Navbar";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { AuthContext } from "../context/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const theme = createTheme((theme) => ({
     type: "dark",
@@ -81,7 +82,7 @@ export default function Dashboard() {
         // Top up the credit with the specified EVC
     };
 
-    return (
+    return user ? (
         <ThemeProvider theme={theme}>
             <Grid container component="main" sx={{ height: "100vh" }}>
                 <Navbar />
@@ -220,5 +221,7 @@ export default function Dashboard() {
                 </Grid>
             </Grid>
         </ThemeProvider>
+    ) : (
+        <Navigate to="/login" />
     );
 }

@@ -52,17 +52,11 @@ const theme = createTheme();
 export default function SignIn() {
     // eslint-disable-next-line
     const navigate = useNavigate();
-    // eslint-disable-next-line
     const [errorLogin, setErrorLogin] = useState(false);
-    // eslint-disable-next-line
+    const [error, setError] = useState(null);
     const [successLogin, setSuccessLogin] = useState(false);
 
-    const [credentials, setCredentials] = useState({
-        customer_id: null,
-        password: null,
-    });
-
-    const { loading, error, dispatch } = React.useContext(AuthContext);
+    const { user, dispatch } = React.useContext(AuthContext);
 
     const [open, setOpen] = useState(true);
 
@@ -72,14 +66,6 @@ export default function SignIn() {
         const data = new FormData(event.currentTarget);
         const password = data.get("password");
         const customer_id = data.get("email");
-
-        setCredentials((prev) => {
-            return {
-                ...prev,
-                customer_id,
-                password,
-            };
-        });
 
         dispatch({ type: "LOGIN_START" });
 
@@ -94,6 +80,7 @@ export default function SignIn() {
             setErrorLogin(false);
             navigate("/dashboard");
         } catch (error) {
+            if (error.response.status === 300) setError(error);
             dispatch({ type: "LOGIN_FAILURE", payload: error.response.data });
             setOpen(true);
             setErrorLogin(true);
@@ -101,7 +88,9 @@ export default function SignIn() {
         }
     };
 
-    return (
+    return user ? (
+        <Navigate to="/dashboard" />
+    ) : (
         <ThemeProvider theme={theme}>
             <Grid container component="main" sx={{ height: "100vh" }}>
                 <CssBaseline />
@@ -172,7 +161,9 @@ export default function SignIn() {
                                             </IconButton>
                                         }
                                     >
-                                        Login failed, please try again
+                                        {error?.response?.status
+                                            ? "You're trying to login with an admin account go to /admin/login"
+                                            : "Login failed, please try again"}
                                     </Alert>
                                 </Collapse>
                             )}

@@ -1,8 +1,8 @@
 import React from "react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { AppBar, Toolbar, Typography, IconButton, Button } from "@mui/material";
-import { Menu } from "@mui/icons-material";
+import { AppBar, Toolbar, Typography, Button } from "@mui/material";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const theme = createTheme((theme) => ({
     root: {
@@ -17,21 +17,21 @@ const theme = createTheme((theme) => ({
 }));
 
 function Navbar() {
-    const { user } = React.useContext(AuthContext);
+    const { user, dispatch } = React.useContext(AuthContext);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        dispatch({ type: "LOGOUT" });
+        navigate("/login");
+    };
 
     return (
         <ThemeProvider theme={theme}>
             <AppBar position="fixed">
                 <Toolbar>
-                    {/* <IconButton
-                        edge="start"
-                        className={theme.menuButton}
-                        color="inherit"
-                        aria-label="menu"
-                    >
-                        <Menu />
-                    </IconButton> */}
-                    <Typography variant="h6">IGSE Home</Typography>
+                    <Typography variant="h6">
+                        IGSE {user?.user?.type === "admin" ? "Admin" : ""} Home
+                    </Typography>
 
                     <Typography
                         sx={{
@@ -40,10 +40,9 @@ function Navbar() {
                         }}
                         variant="h6"
                     >
-                        Welcome to your Homepage:{" "}
-                        {user?.user?.customer_id
-                            .split("@")[0]
-                            .replace(/[.#$\\]/g, "_")}
+                        Welcome to your{" "}
+                        {user?.user?.type === "admin" ? "Admin" : "Customer"}{" "}
+                        Homepage
                     </Typography>
 
                     <Button
@@ -55,6 +54,7 @@ function Navbar() {
                             marginLeft: "auto",
                         }}
                         color="inherit"
+                        onClick={handleLogout}
                     >
                         Logout
                     </Button>

@@ -9,6 +9,7 @@ import ForgotPassword from "./customer/ForgotPassword";
 import UserContext from "./context/userContext";
 import AdminSignIn from "./admin/AdminSignIn";
 import AdminHomePage from "./admin/adminDashboard";
+import PageNotFound from "./components/PageNotFound";
 
 function App() {
     const [currentUser, setCurrentUser] = useState(null);
@@ -23,7 +24,9 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/forgot" element={<ForgotPassword />} />
                     <Route path="/admin" element={<AdminSignIn />} />
+                    <Route path="/admin/login" element={<AdminSignIn />} />
                     <Route path="/admin/home" element={<AdminHomePage />} />
+                    <Route path="*" element={<PageNotFound />} />
                 </Routes>
             </Router>
         </UserContext.Provider>

@@ -22,8 +22,8 @@ import { useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { Navigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import UserContext from "../context/userContext";
-import useFetch from "../hooks/useFetch";
+import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
 
 function Copyright(props) {
     return (
@@ -50,25 +50,49 @@ function Copyright(props) {
 const theme = createTheme();
 
 export default function AdminSignIn() {
-    // eslint-disable-next-line
-    const user = React.useContext(UserContext);
-    // eslint-disable-next-line
     const navigate = useNavigate();
-    // eslint-disable-next-line
     const [errorLogin, setErrorLogin] = useState(false);
-    // eslint-disable-next-line
+    const [error, setError] = useState(null);
     const [successLogin, setSuccessLogin] = useState(false);
     const [open, setOpen] = useState(true);
+
+    // eslint-disable-next-line no-unused-vars
+    const [tariff, setTariff] = useState(null);
+
+    // eslint-disable-next-line no-unused-vars
+    const { user, dispatch } = React.useContext(AuthContext);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
+        const customer_id = data.get("email");
         const password = data.get("password");
+
+        dispatch({ type: "LOGIN_START" });
+
+        try {
+            const res = await axios.post("/admin/login", {
+                customer_id,
+                password,
+                forAdmin: true,
+            });
+            dispatch({ type: "LOGIN_SUCCESS", payload: res.data });
+            setSuccessLogin(true);
+            setErrorLogin(false);
+            setOpen(true);
+            navigate("/admin/home");
+        } catch (err) {
+            if (err.response.status === 300) setError(err);
+            dispatch({ type: "LOGIN_FAILURE", payload: err.response.data });
+            setErrorLogin(true);
+            setSuccessLogin(false);
+            setOpen(true);
+        }
     };
 
-    const { data, loading, error, refetch } = useFetch("/api/tariff");
-
-    return (
+    return user && user.user.type === "admin" ? (
+        <Navigate to="/admin/home" />
+    ) : (
         <ThemeProvider theme={theme}>
             <Grid container component="main" sx={{ height: "100vh" }}>
                 <CssBaseline />
@@ -111,7 +135,7 @@ export default function AdminSignIn() {
                             <LockPerson />
                         </Avatar>
                         <Typography component="h1" variant="h5">
-                            Sign in
+                            Admin Sign in
                         </Typography>
 
                         <Box
@@ -137,7 +161,9 @@ export default function AdminSignIn() {
                                             </IconButton>
                                         }
                                     >
-                                        Login failed, please try again
+                                        {error
+                                            ? "You're trying to login with a customer account go to /login"
+                                            : "Login failed, please try again"}
                                     </Alert>
                                 </Collapse>
                             )}
@@ -199,25 +225,6 @@ export default function AdminSignIn() {
                             >
                                 Sign In
                             </Button>
-                            <Grid
-                                container
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    gap: "49%",
-                                }}
-                            >
-                                <Grid item>
-                                    <Link href="/forgot" variant="body2">
-                                        Forgot password?
-                                    </Link>
-                                </Grid>
-                                <Grid item>
-                                    <Link href="/register" variant="body2">
-                                        Don't have an account? Register
-                                    </Link>
-                                </Grid>
-                            </Grid>
                             <Copyright sx={{ mt: 5 }} />
                         </Box>
                     </Box>
