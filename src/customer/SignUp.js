@@ -46,12 +46,17 @@ function Copyright(props) {
     );
 }
 
-const theme = createTheme();
+const theme = createTheme({
+    palette: {
+        mode: "dark",
+    },
+});
 
 export default function SignIn() {
     const [isQrClicked, setQrClicked] = React.useState(false);
     const [propertyType, setPropertyType] = React.useState("");
 
+    const [errorEVC, setErrorEVC] = React.useState(false);
     const [errorRegister, setErrorRegister] = React.useState(false);
     const [successRegister, setSuccessRegister] = React.useState(false);
     const [open, setOpen] = React.useState(false);
@@ -73,18 +78,43 @@ export default function SignIn() {
             evc: data.get("evc"),
             type: "customer",
         };
-        console.log(body);
 
         try {
-            const response = await axios.post("/api/auth/register", body);
-            setOpen(true);
-            setSuccessRegister(true);
-            setErrorRegister(false);
-            navigate("/dashboard");
+            if (body.evc === "") {
+                await axios.post("/api/auth/register", body);
+                setOpen(true);
+                setSuccessRegister(true);
+                setErrorRegister(false);
+                setErrorEVC(false);
+                navigate("/login");
+            } else {
+                const evc = body.evc;
+                console.log(evc);
+                await axios.post("/api/evc/verify", {
+                    evc: evc,
+                });
+                await axios.post("/api/evc/use", {
+                    evc: body.evc,
+                });
+                await axios.post("/api/auth/register", body);
+                setOpen(true);
+                setSuccessRegister(true);
+                setErrorRegister(false);
+                setErrorEVC(false);
+                navigate("/login");
+            }
         } catch (error) {
-            setOpen(true);
-            setErrorRegister(true);
-            setSuccessRegister(false);
+            if (error.response?.data?.message.includes("Voucher")) {
+                setOpen(true);
+                setSuccessRegister(false);
+                setErrorRegister(false);
+                setErrorEVC(true);
+            } else {
+                setOpen(true);
+                setErrorRegister(true);
+                setSuccessRegister(false);
+                setErrorEVC(false);
+            }
         }
     };
 
@@ -149,6 +179,33 @@ export default function SignIn() {
                             sx={{ mt: 5 }}
                         >
                             <Grid container spacing={2}>
+                                {errorEVC && (
+                                    <Collapse in={open}>
+                                        <Alert
+                                            severity="error"
+                                            action={
+                                                <IconButton
+                                                    aria-label="close"
+                                                    color="inherit"
+                                                    size="small"
+                                                    onClick={() => {
+                                                        setOpen(false);
+                                                        setErrorRegister(false);
+                                                        setSuccessRegister(
+                                                            false
+                                                        );
+                                                        setErrorEVC(false);
+                                                    }}
+                                                >
+                                                    <CloseIcon fontSize="inherit" />
+                                                </IconButton>
+                                            }
+                                        >
+                                            You Entered Wrong EVC or it's
+                                            already used
+                                        </Alert>
+                                    </Collapse>
+                                )}
                                 {errorRegister && (
                                     <Collapse in={open}>
                                         <Alert

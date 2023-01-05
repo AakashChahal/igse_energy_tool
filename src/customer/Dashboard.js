@@ -10,21 +10,29 @@ import {
     Typography,
     Box,
 } from "@mui/material";
+import { deepPurple, cyan, teal } from "@mui/material/colors";
 import Navbar from "../components/Navbar";
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
 import { AuthContext } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
+import useFetch from "../hooks/useFetch";
+import { async } from "@firebase/util";
+import axios from "axios";
 
-const theme = createTheme((theme) => ({
-    type: "dark",
+const theme = createTheme({
+    palette: {
+        mode: "dark",
+        purple: {
+            main: deepPurple["A700"],
+        },
+        cyan: {
+            main: cyan["A700"],
+        },
+        teal: {
+            main: teal["A700"],
+        },
+    },
     root: {
         flexGrow: 1,
-    },
-    paper: {
-        padding: theme.spacing(2),
-        margin: "auto",
-        maxWidth: 500,
     },
     image: {
         width: 128,
@@ -36,21 +44,7 @@ const theme = createTheme((theme) => ({
         maxWidth: "100%",
         maxHeight: "100%",
     },
-}));
-
-const firebaseConfig = {
-    apiKey: "AIzaSyAF57fDJpxBjL2OS4R1x7vHNxGOaugdOeY",
-    authDomain: "igse-energy-tool.firebaseapp.com",
-    databaseURL: "https://igse-energy-tool-default-rtdb.firebaseio.com",
-    projectId: "igse-energy-tool",
-    storageBucket: "igse-energy-tool.appspot.com",
-    messagingSenderId: "994278000336",
-    appId: "1:994278000336:web:7099deec2acecbd2ee80d5",
-    measurementId: "G-YGQ5LCHR41",
-};
-
-const firebaseApp = initializeApp(firebaseConfig);
-getAuth(firebaseApp);
+});
 
 export default function Dashboard() {
     const { user } = React.useContext(AuthContext);
@@ -69,9 +63,25 @@ export default function Dashboard() {
     const [creditAmount, setCreditAmount] = React.useState("");
     const [evc, setEVC] = React.useState("");
 
-    const handleSubmitMeterReadings = (event) => {
+    // const { data, error, loading, refetch } = useFetch("/api/");
+
+    const handleSubmitMeterReadings = async (event) => {
+        // Submit the meter readings with the specified submission date
         event.preventDefault();
-        // Submit meter readings to the server
+        const readings = {
+            customer_id: user.user.customer_id,
+            submission_date: submissionDate,
+            electricity_meter_reading_day: electricityMeterReadingDay,
+            electricity_meter_reading_night: electricityMeterReadingNight,
+            gas_meter_reading: gasMeterReading,
+        };
+
+        try {
+            const response = await axios.post("/api/reading", readings);
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     const handlePayLatestBill = () => {
@@ -98,7 +108,7 @@ export default function Dashboard() {
                         flexDirection: "column",
                     }}
                 >
-                    <Grid className={theme.meterReadingSection}>
+                    <Grid item>
                         <Box
                             sx={{
                                 my: 8,
@@ -108,16 +118,8 @@ export default function Dashboard() {
                                 alignItems: "center",
                             }}
                         >
-                            <FormControl
-                                className={theme.meterReadingForm}
-                                fullWidth
-                                onSubmit={handleSubmitMeterReadings}
-                            >
-                                <Typography
-                                    component="h1"
-                                    variant="h2"
-                                    className={theme.meterReadingFormTitle}
-                                >
+                            <FormControl fullWidth sx={{ gap: 2 }}>
+                                <Typography component="h1" variant="h3">
                                     Submit Meter Readings
                                 </Typography>
                                 <TextField
@@ -164,28 +166,32 @@ export default function Dashboard() {
                                     type="submit"
                                     variant="contained"
                                     color="primary"
+                                    onClick={handleSubmitMeterReadings}
                                 >
                                     Submit
                                 </Button>
                             </FormControl>
                         </Box>
                     </Grid>
-                    <Grid className={theme.billPaymentSection}>
-                        <Box>
-                            <Typography component="h1" variant="h2">
+                    <Grid item>
+                        <Box
+                            sx={{
+                                alignItems: "center",
+                                justifyContent: "center",
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <Typography component="h1" variant="h3">
                                 Pay Latest Bill
                             </Typography>
                             <Typography component="p">
                                 Latest Unpaid Bill Amount:{" "}
-                                <span className={theme.billPaymentAmount}>
-                                    {latestUnpaidBillAmount}
-                                </span>
+                                <strong>{latestUnpaidBillAmount}</strong>
                             </Typography>
                             <Typography component="p">
                                 Credit Amount:{" "}
-                                <span className={theme.billPaymentAmount}>
-                                    £{user?.user?.balance}
-                                </span>
+                                <strong>£{user?.user?.balance}</strong>
                             </Typography>
                             <Button
                                 variant="contained"
@@ -196,9 +202,24 @@ export default function Dashboard() {
                             </Button>
                         </Box>
                     </Grid>
-                    <Grid className={theme.creditTopUpSection}>
-                        <Box>
-                            <Typography component="h1" variant="h2">
+                    <Grid
+                        item
+                        sx={{
+                            alignItems: "center",
+                            justifyContent: "center",
+                            display: "flex",
+                            gap: 2,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                alignItems: "center",
+                                justifyContent: "center",
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <Typography component="h1" variant="h3">
                                 Top Up Credit
                             </Typography>
                             <TextField
@@ -218,10 +239,39 @@ export default function Dashboard() {
                             </Button>
                         </Box>
                     </Grid>
+                    <Grid
+                        item
+                        sx={{
+                            alignItems: "center",
+                            justifyContent: "center",
+                            display: "flex",
+                            gap: 2,
+                            mt: 4,
+                        }}
+                    >
+                        <Box>
+                            <Button
+                                variant="contained"
+                                color="teal"
+                                onClick={() => {}}
+                            >
+                                View Previous Meter Readings
+                            </Button>
+                        </Box>
+                        <Box>
+                            <Button
+                                variant="contained"
+                                color="purple"
+                                onClick={() => {}}
+                            >
+                                View Current Tariff Charges
+                            </Button>
+                        </Box>
+                    </Grid>
                 </Grid>
             </Grid>
         </ThemeProvider>
-    ) : user.user.type === "admin" ? (
+    ) : user?.user?.type === "admin" ? (
         <Navigate to="/admin/home" />
     ) : (
         <Navigate to="/login" />

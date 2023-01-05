@@ -19,33 +19,14 @@ import { AuthContext } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 
-const theme = createTheme((theme) => ({
+const theme = createTheme({
     palette: {
         mode: "dark",
     },
     root: {
         flexGrow: 1,
     },
-    priceSettingForm: {
-        "& > *": {
-            margin: theme.spacing(1),
-            width: "120px",
-        },
-    },
-    priceSettingFormTitle: {
-        margin: theme.spacing(2),
-    },
-    meterReadingTable: {
-        margin: theme.spacing(2),
-    },
-    statisticsSection: {
-        margin: theme.spacing(2),
-    },
-    statisticsValue: {
-        fontSize: "1.5rem",
-        fontWeight: "bold",
-    },
-}));
+});
 
 export let consumptionData = [["type", "reading"]];
 export let readingsData = [[], []];
@@ -90,16 +71,16 @@ function AdminHomePage() {
 
         for (const key in priceData) {
             if (priceData[key] === "") {
+                console.log(priceData[key]);
                 update = true;
-                break;
             }
         }
 
         try {
             if (update) {
-                const res = await axios.post("/api/tariff", priceData);
-            } else {
                 const res = await axios.put("/api/tariff", priceData);
+            } else {
+                const res = await axios.post("/api/tariff", priceData);
             }
             setElectricityPriceDay("");
             setElectricityPriceNight("");
@@ -109,7 +90,6 @@ function AdminHomePage() {
             setErrorCreatingTariff(false);
             setSuccessCreatingTariff(true);
         } catch (error) {
-            console.log(error);
             setOpen(true);
             setErrorCreatingTariff(true);
             setSuccessCreatingTariff(false);
@@ -334,7 +314,7 @@ function AdminHomePage() {
                 </Grid>
             </Grid>
         </ThemeProvider>
-    ) : user.user.type === "customer" ? (
+    ) : user?.user?.type === "customer" ? (
         <Navigate to="/dashboard" />
     ) : (
         <Navigate to="/login" />
