@@ -13,10 +13,16 @@ import {
     Box,
     Grid,
     Typography,
+    Alert,
+    IconButton,
+    Collapse,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { LockPerson, QrCodeScanner } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import QrScanner from "./QrScanner";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Copyright(props) {
     return (
@@ -46,11 +52,40 @@ export default function SignIn() {
     const [isQrClicked, setQrClicked] = React.useState(false);
     const [propertyType, setPropertyType] = React.useState("");
 
+    const [errorRegister, setErrorRegister] = React.useState(false);
+    const [successRegister, setSuccessRegister] = React.useState(false);
+    const [open, setOpen] = React.useState(false);
+
+    const navigate = useNavigate();
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        // eslint-disable-next-line
-        const password = data.get("password");
+
+        const body = {
+            first_name: data.get("firstName"),
+            last_name: data.get("lastName"),
+            customer_id: data.get("email"),
+            password: data.get("password"),
+            address: data.get("address"),
+            property_type: propertyType,
+            num_bedroom: data.get("numBedrooms"),
+            evc: data.get("evc"),
+            type: "customer",
+        };
+        console.log(body);
+
+        try {
+            const response = await axios.post("/api/auth/register", body);
+            setOpen(true);
+            setSuccessRegister(true);
+            setErrorRegister(false);
+            navigate("/dashboard");
+        } catch (error) {
+            setOpen(true);
+            setErrorRegister(true);
+            setSuccessRegister(false);
+        }
     };
 
     const toggleScanner = () => {
@@ -114,6 +149,57 @@ export default function SignIn() {
                             sx={{ mt: 5 }}
                         >
                             <Grid container spacing={2}>
+                                {errorRegister && (
+                                    <Collapse in={open}>
+                                        <Alert
+                                            severity="error"
+                                            action={
+                                                <IconButton
+                                                    aria-label="close"
+                                                    color="inherit"
+                                                    size="small"
+                                                    onClick={() => {
+                                                        setOpen(false);
+                                                        setErrorRegister(false);
+                                                        setSuccessRegister(
+                                                            false
+                                                        );
+                                                    }}
+                                                >
+                                                    <CloseIcon fontSize="inherit" />
+                                                </IconButton>
+                                            }
+                                        >
+                                            Some error Occured, Please try again
+                                        </Alert>
+                                    </Collapse>
+                                )}
+                                {successRegister && (
+                                    <Collapse in={open}>
+                                        <Alert
+                                            severity="success"
+                                            action={
+                                                <IconButton
+                                                    aria-label="close"
+                                                    color="inherit"
+                                                    size="small"
+                                                    onClick={() => {
+                                                        setOpen(false);
+                                                        setErrorRegister(false);
+                                                        setSuccessRegister(
+                                                            false
+                                                        );
+                                                    }}
+                                                >
+                                                    <CloseIcon fontSize="inherit" />
+                                                </IconButton>
+                                            }
+                                        >
+                                            Registration Successful, Please
+                                            Login to Continue
+                                        </Alert>
+                                    </Collapse>
+                                )}
                                 <Grid item xs={12} sm={6}>
                                     <TextField
                                         autoComplete="given-name"
@@ -216,7 +302,6 @@ export default function SignIn() {
                                 </Grid>
                                 <Grid item xs={12}>
                                     <TextField
-                                        required
                                         id="evc"
                                         label="8 digits EVC"
                                         name="evc"
@@ -242,17 +327,6 @@ export default function SignIn() {
                                         />
                                     )}
                                 </Grid>
-                                {/* <Grid item xs={12}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                value="allowExtraEmails"
-                                                color="primary"
-                                            />
-                                        }
-                                        label="I want to receive inspiration, marketing promotions and updates via email."
-                                    />
-                                </Grid> */}
                             </Grid>
                             <Button
                                 type="submit"

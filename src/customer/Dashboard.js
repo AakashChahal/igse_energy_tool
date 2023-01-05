@@ -82,7 +82,7 @@ export default function Dashboard() {
         // Top up the credit with the specified EVC
     };
 
-    return user ? (
+    return user && user.user.type === "customer" ? (
         <ThemeProvider theme={theme}>
             <Grid container component="main" sx={{ height: "100vh" }}>
                 <Navbar />
@@ -221,6 +221,8 @@ export default function Dashboard() {
                 </Grid>
             </Grid>
         </ThemeProvider>
+    ) : user.user.type === "admin" ? (
+        <Navigate to="/admin/home" />
     ) : (
         <Navigate to="/login" />
     );

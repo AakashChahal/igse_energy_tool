@@ -4,8 +4,6 @@ import {
     Button,
     CssBaseline,
     TextField,
-    FormControlLabel,
-    Checkbox,
     Link,
     Paper,
     Box,
@@ -47,7 +45,11 @@ function Copyright(props) {
     );
 }
 
-const theme = createTheme();
+const theme = createTheme({
+    palette: {
+        mode: "dark",
+    },
+});
 
 export default function SignIn() {
     // eslint-disable-next-line
@@ -209,15 +211,6 @@ export default function SignIn() {
                                 type="password"
                                 id="password"
                                 autoComplete="current-password"
-                            />
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        value="remember"
-                                        color="primary"
-                                    />
-                                }
-                                label="Remember me"
                             />
                             <Button
                                 type="submit"

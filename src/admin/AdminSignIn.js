@@ -47,7 +47,11 @@ function Copyright(props) {
     );
 }
 
-const theme = createTheme();
+const theme = createTheme({
+    palette: {
+        mode: "dark",
+    },
+});
 
 export default function AdminSignIn() {
     const navigate = useNavigate();
@@ -56,10 +60,6 @@ export default function AdminSignIn() {
     const [successLogin, setSuccessLogin] = useState(false);
     const [open, setOpen] = useState(true);
 
-    // eslint-disable-next-line no-unused-vars
-    const [tariff, setTariff] = useState(null);
-
-    // eslint-disable-next-line no-unused-vars
     const { user, dispatch } = React.useContext(AuthContext);
 
     const handleSubmit = async (event) => {
