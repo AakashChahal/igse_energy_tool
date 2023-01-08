@@ -2,7 +2,7 @@ import React from "react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { AppBar, Toolbar, Typography, Button } from "@mui/material";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const theme = createTheme((theme) => ({
     palette: {
@@ -33,7 +33,20 @@ function Navbar() {
             <AppBar position="fixed">
                 <Toolbar>
                     <Typography variant="h6">
-                        IGSE {user?.user?.type === "admin" ? "Admin" : ""} Home
+                        <Link
+                            to={`/${
+                                user?.user?.type === "admin"
+                                    ? "admin/home"
+                                    : "dashboard"
+                            }`}
+                            style={{
+                                color: "inherit",
+                                textDecoration: "none",
+                            }}
+                        >
+                            IGSE {user?.user?.type === "admin" ? "Admin" : ""}{" "}
+                            Home
+                        </Link>
                     </Typography>
 
                     <Typography

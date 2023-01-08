@@ -9,13 +9,16 @@ import {
     CssBaseline,
     Typography,
     Box,
+    Alert,
+    Collapse,
+    IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { deepPurple, cyan, teal } from "@mui/material/colors";
 import Navbar from "../components/Navbar";
 import { AuthContext } from "../context/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import useFetch from "../hooks/useFetch";
-import { async } from "@firebase/util";
 import axios from "axios";
 
 const theme = createTheme({
@@ -62,11 +65,29 @@ export default function Dashboard() {
     // eslint-disable-next-line
     const [creditAmount, setCreditAmount] = React.useState("");
     const [evc, setEVC] = React.useState("");
+    const [open, setOpen] = React.useState(false);
+    const [errorSubmitting, setErrorSubmitting] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState(null);
+    const [successSubmitting, setSuccessSubmitting] = React.useState(false);
+    const navigate = useNavigate();
 
-    // const { data, error, loading, refetch } = useFetch("/api/");
+    // eslint-disable-next-line
+    const { data, error, loading, refetch } = useFetch("/api/reading");
 
     const handleSubmitMeterReadings = async (event) => {
         // Submit the meter readings with the specified submission date
+        if (
+            electricityMeterReadingDay === "" ||
+            electricityMeterReadingNight === "" ||
+            gasMeterReading === ""
+        ) {
+            setErrorMessage("Please fill in all the fields");
+            setOpen(true);
+            setErrorSubmitting(true);
+            setSuccessSubmitting(false);
+            return;
+        }
+
         event.preventDefault();
         const readings = {
             customer_id: user.user.customer_id,
@@ -74,18 +95,31 @@ export default function Dashboard() {
             electricity_meter_reading_day: electricityMeterReadingDay,
             electricity_meter_reading_night: electricityMeterReadingNight,
             gas_meter_reading: gasMeterReading,
+            status: "pending",
         };
 
         try {
             const response = await axios.post("/api/reading", readings);
             console.log(response);
+            setOpen(true);
+            setErrorSubmitting(false);
+            setSuccessSubmitting(true);
+            setElectricityMeterReadingDay("");
+            setElectricityMeterReadingNight("");
+            setGasMeterReading("");
         } catch (error) {
-            console.log(error);
+            setErrorMessage(
+                "Some Error Occurred, while submitting meter readings, please try again"
+            );
+            setOpen(true);
+            setErrorSubmitting(true);
+            setSuccessSubmitting(false);
         }
     };
 
     const handlePayLatestBill = () => {
         // Pay the latest unpaid bill with the current credit amount
+        navigate("/dashboard/payment");
     };
 
     const handleTopUpCredit = () => {
@@ -122,7 +156,50 @@ export default function Dashboard() {
                                 <Typography component="h1" variant="h3">
                                     Submit Meter Readings
                                 </Typography>
+                                {errorSubmitting && (
+                                    <Collapse in={open}>
+                                        <Alert
+                                            severity="error"
+                                            action={
+                                                <IconButton
+                                                    aria-label="close"
+                                                    color="inherit"
+                                                    size="small"
+                                                    onClick={() => {
+                                                        setOpen(false);
+                                                    }}
+                                                >
+                                                    <CloseIcon fontSize="inherit" />
+                                                </IconButton>
+                                            }
+                                        >
+                                            {errorMessage}
+                                        </Alert>
+                                    </Collapse>
+                                )}
+                                {successSubmitting && (
+                                    <Collapse in={open}>
+                                        <Alert
+                                            severity="success"
+                                            action={
+                                                <IconButton
+                                                    aria-label="close"
+                                                    color="inherit"
+                                                    size="small"
+                                                    onClick={() => {
+                                                        setOpen(false);
+                                                    }}
+                                                >
+                                                    <CloseIcon fontSize="inherit" />
+                                                </IconButton>
+                                            }
+                                        >
+                                            Meter Readings Submitted Succesfully
+                                        </Alert>
+                                    </Collapse>
+                                )}
                                 <TextField
+                                    required
                                     id="submission-date"
                                     label="Submission Date"
                                     type="date"
@@ -132,6 +209,7 @@ export default function Dashboard() {
                                     }
                                 />
                                 <TextField
+                                    required
                                     id="electricity-meter-reading-day"
                                     label="Electricity Meter Reading (Day)"
                                     type="number"
@@ -143,6 +221,7 @@ export default function Dashboard() {
                                     }
                                 />
                                 <TextField
+                                    required
                                     id="electricity-meter-reading-night"
                                     label="Electricity Meter Readin (Night)"
                                     type="number"
@@ -154,6 +233,7 @@ export default function Dashboard() {
                                     }
                                 />
                                 <TextField
+                                    required
                                     id="gas-meter-reading"
                                     label="Gas Meter Reading"
                                     type="number"
