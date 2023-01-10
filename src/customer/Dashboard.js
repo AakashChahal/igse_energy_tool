@@ -20,6 +20,7 @@ import { AuthContext } from "../context/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import useFetch from "../hooks/useFetch";
 import axios from "axios";
+import { Chart } from "react-google-charts";
 
 const theme = createTheme({
     palette: {
@@ -49,6 +50,9 @@ const theme = createTheme({
     },
 });
 
+export const meterReadings = [];
+export const tariffData = [];
+
 export default function Dashboard() {
     const { user } = React.useContext(AuthContext);
     const [submissionDate, setSubmissionDate] = React.useState(
@@ -69,11 +73,15 @@ export default function Dashboard() {
     const [errorSubmitting, setErrorSubmitting] = React.useState(false);
     const [errorMessage, setErrorMessage] = React.useState(null);
     const [successSubmitting, setSuccessSubmitting] = React.useState(false);
+    let [showMeterReadingsTable, setShowMeterReadingsTable] =
+        React.useState(false);
+    let [showTariffChargesTable, setShowTariffChargesTable] =
+        React.useState(false);
+
+    let { data, dataLoading, dataError, refetch } = useFetch(
+        `/api/reading/${user.user.customer_id}`
+    );
     const navigate = useNavigate();
-
-    // eslint-disable-next-line
-    const { data, error, loading, refetch } = useFetch("/api/reading");
-
     const handleSubmitMeterReadings = async (event) => {
         // Submit the meter readings with the specified submission date
         if (
@@ -124,6 +132,40 @@ export default function Dashboard() {
 
     const handleTopUpCredit = () => {
         // Top up the credit with the specified EVC
+    };
+
+    const showMeterReadings = async () => {
+        refetch(`/api/reading/${user.user.customer_id}`);
+        const readingData = await data.reading;
+
+        if (readingData) {
+            meterReadings.push(Object.keys(readingData[1]));
+            for (const reading of readingData) {
+                if (reading && !meterReadings.includes(reading)) {
+                    meterReadings.push(Object.values(reading));
+                }
+            }
+            setShowMeterReadingsTable(showMeterReadingsTable ? false : true);
+            showMeterReadingsTable = !showMeterReadingsTable;
+            if (!showMeterReadingsTable) {
+                meterReadings.length = 0;
+            }
+        }
+    };
+
+    const showTariffCharges = async () => {
+        const resData = await (await axios.get("/api/tariff")).data.tariffs;
+        tariffData.push(Object.keys(resData));
+        tariffData.push([]);
+        for (const tariff of Object.values(resData)) {
+            tariffData[1].push(tariff.rate);
+        }
+        console.log(tariffData);
+        setShowTariffChargesTable(showTariffChargesTable ? false : true);
+        showTariffChargesTable = !showTariffChargesTable;
+        if (!showTariffChargesTable) {
+            tariffData.length = 0;
+        }
     };
 
     return user && user.user.type === "customer" ? (
@@ -333,21 +375,98 @@ export default function Dashboard() {
                             <Button
                                 variant="contained"
                                 color="teal"
-                                onClick={() => {}}
+                                onClick={showMeterReadings}
                             >
-                                View Previous Meter Readings
+                                {showMeterReadingsTable ? "Close" : "View"}{" "}
+                                Previous Meter Readings
                             </Button>
                         </Box>
                         <Box>
                             <Button
                                 variant="contained"
                                 color="purple"
-                                onClick={() => {}}
+                                onClick={showTariffCharges}
                             >
-                                View Current Tariff Charges
+                                {showTariffChargesTable ? "Close" : "View"}{" "}
+                                Current Tariff Charges
                             </Button>
                         </Box>
                     </Grid>
+                    {showMeterReadingsTable && (
+                        <Grid
+                            item
+                            sx={{
+                                alignItems: "center",
+                                justifyContent: "center",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 2,
+                                mt: 4,
+                            }}
+                        >
+                            {meterReadings.length > 0 ? (
+                                <>
+                                    <Typography component="h1" variant="h3">
+                                        Previous Meter Readings
+                                    </Typography>
+                                    <Chart
+                                        width={"100%"}
+                                        height={"100%"}
+                                        chartType="Table"
+                                        data={Array.from(meterReadings)}
+                                        options={{ title: "Meter Readings" }}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            color: "black",
+                                        }}
+                                    />
+                                </>
+                            ) : (
+                                <Typography component="h1" variant="h6">
+                                    No Previous Meter Readings
+                                </Typography>
+                            )}
+                        </Grid>
+                    )}
+                    {showTariffChargesTable && (
+                        <Grid
+                            item
+                            sx={{
+                                alignItems: "center",
+                                justifyContent: "center",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 2,
+                                mt: 4,
+                            }}
+                        >
+                            {tariffData.length > 0 ? (
+                                <>
+                                    <Typography component="h1" variant="h3">
+                                        Current Tariff Charges
+                                    </Typography>
+                                    <Chart
+                                        width={"100%"}
+                                        height={"100%"}
+                                        chartType="Table"
+                                        data={tariffData}
+                                        options={{ title: "Tariff Charges" }}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            color: "black",
+                                            marginLeft: "auto",
+                                        }}
+                                    />
+                                </>
+                            ) : (
+                                <Typography component="h1" variant="h6">
+                                    No Tariff Charges Available Yet
+                                </Typography>
+                            )}
+                        </Grid>
+                    )}
                 </Grid>
             </Grid>
         </ThemeProvider>
