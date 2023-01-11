@@ -302,6 +302,7 @@ export default function Dashboard() {
                                 justifyContent: "center",
                                 display: "flex",
                                 flexDirection: "column",
+                                gap: 2,
                             }}
                         >
                             <Typography component="h1" variant="h3">
@@ -331,6 +332,7 @@ export default function Dashboard() {
                             justifyContent: "center",
                             display: "flex",
                             gap: 2,
+                            mt: 4,
                         }}
                     >
                         <Box
@@ -339,6 +341,7 @@ export default function Dashboard() {
                                 justifyContent: "center",
                                 display: "flex",
                                 flexDirection: "column",
+                                gap: 2,
                             }}
                         >
                             <Typography component="h1" variant="h3">
@@ -351,7 +354,6 @@ export default function Dashboard() {
                                 value={evc}
                                 onChange={(event) => setEVC(event.target.value)}
                             />
-                            <br />
                             <Button
                                 variant="contained"
                                 color="primary"
@@ -419,6 +421,7 @@ export default function Dashboard() {
                                             width: "100%",
                                             height: "100%",
                                             color: "black",
+                                            marginBottom: "3rem",
                                         }}
                                     />
                                 </>
@@ -457,6 +460,7 @@ export default function Dashboard() {
                                             height: "100%",
                                             color: "black",
                                             marginLeft: "auto",
+                                            marginBottom: "3rem",
                                         }}
                                     />
                                 </>
