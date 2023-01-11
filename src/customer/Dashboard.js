@@ -78,9 +78,7 @@ export default function Dashboard() {
     let [showTariffChargesTable, setShowTariffChargesTable] =
         React.useState(false);
 
-    let { data, dataLoading, dataError, refetch } = useFetch(
-        `/api/reading/${user.user.customer_id}`
-    );
+    let { data, refetch } = useFetch(`/api/reading/${user.user.customer_id}`);
     const navigate = useNavigate();
     const handleSubmitMeterReadings = async (event) => {
         // Submit the meter readings with the specified submission date
@@ -154,7 +152,7 @@ export default function Dashboard() {
     };
 
     const showTariffCharges = async () => {
-        const resData = await (await axios.get("/api/tariff")).data.tariffs;
+        const resData = (await axios.get("/api/tariff")).data.tariffs;
         tariffData.push(Object.keys(resData));
         tariffData.push([]);
         for (const tariff of Object.values(resData)) {
