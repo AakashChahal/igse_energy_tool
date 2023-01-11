@@ -28,12 +28,11 @@ const theme = createTheme({
     },
 });
 
-export let consumptionData = [["type", "reading"]];
-export let readingsData = [[], []];
-export const chartOptions = {
-    title: "Meter Readings",
-    is3D: true,
-};
+export let consumptionData = [];
+export let avgGasPerUser = [];
+export let avgElectricityPerUser = [];
+export const readingsData = [];
+export const tariffData = [];
 
 function AdminHomePage() {
     const [electricityPriceDay, setElectricityPriceDay] = React.useState("");
@@ -41,13 +40,18 @@ function AdminHomePage() {
         React.useState("");
     const [gasPrice, setGasPrice] = React.useState("");
     const [standingCharge, setStandingCharge] = React.useState("");
-
-    // eslint-disable-next-line
-    const [meterReadings, setMeterReadings] = React.useState([]);
-    const [averageElectricityConsumption, setAverageElectricityConsumption] =
-        React.useState("");
-    const [averageGasConsumption, setAverageGasConsumption] =
-        React.useState("");
+    const [showMeterReadings, setShowMeterReadings] = React.useState(false);
+    let [showTariffTable, setShowTariffTable] = React.useState(false);
+    let [showStatistics, setShowStatistics] = React.useState(false);
+    let [
+        averageElectricityConsumptionNight,
+        setAverageElectricityConsumptionNight,
+    ] = React.useState(0);
+    let [
+        averageElectricityConsumptionDay,
+        setAverageElectricityConsumptionDay,
+    ] = React.useState(0);
+    let [averageGasConsumption, setAverageGasConsumption] = React.useState(0);
 
     const [errorCreatingTariff, setErrorCreatingTariff] = React.useState(false);
     const [successCreatingTariff, setSuccessCreatingTariff] =
@@ -56,8 +60,7 @@ function AdminHomePage() {
 
     const { user } = React.useContext(AuthContext);
 
-    // const { data, dataError, dataLoading, refetch } = useFetch("/api/reading");
-    // console.log(data);
+    const { data, dataError, dataLoading, refetch } = useFetch("/api/reading");
     const handleSubmitPrices = async (event) => {
         event.preventDefault();
         const priceData = {
@@ -71,7 +74,6 @@ function AdminHomePage() {
 
         for (const key in priceData) {
             if (priceData[key] === "") {
-                console.log(priceData[key]);
                 update = true;
             }
         }
@@ -96,38 +98,137 @@ function AdminHomePage() {
         }
     };
 
-    const handleFetchMeterReadings = () => {
+    const handleFetchMeterReadings = async () => {
+        setShowTariffTable(false);
+        setShowStatistics(false);
+        setAverageElectricityConsumptionDay(0);
+        setAverageElectricityConsumptionNight(0);
+        setAverageGasConsumption(0);
+        consumptionData.length = 0;
+        avgGasPerUser.length = 0;
+        avgElectricityPerUser.length = 0;
         // Fetch the meter readings from the server and set them in the state
-        // if (data) {
-        //     for (const key in data.readings) {
-        //         for (const readings in data.readings[key][1]) {
-        //             readingsData[0].push(readings);
-        //             readingsData[1].push(data.readings[key][1][readings]);
-        //         }
-        //     }
-        //     console.log(readingsData);
-        // }
+        const readingData = await data.readings;
+        setShowMeterReadings(!showMeterReadings);
+        if (!showMeterReadings) {
+            readingsData.length = 0;
+        }
+
+        if (readingData) {
+            readingsData.push(Object.keys(Object.values(readingData)[0][1]));
+            for (const user of Object.values(readingData)) {
+                for (const reading of user) {
+                    if (reading) {
+                        readingsData.push([...Object.values(reading)]);
+                    }
+                }
+            }
+        }
     };
 
-    const handleFetchStatistics = () => {
+    const handleFetchTariff = async () => {
+        setShowMeterReadings(false);
+        setShowStatistics(false);
+        setAverageElectricityConsumptionDay(0);
+        setAverageElectricityConsumptionNight(0);
+        setAverageGasConsumption(0);
+        consumptionData.length = 0;
+        avgGasPerUser.length = 0;
+        avgElectricityPerUser.length = 0;
+        tariffData.length = 0;
+        const resData = (await axios.get("/api/tariff")).data.tariffs;
+        tariffData.push(Object.keys(resData));
+        tariffData.push([]);
+        for (const tariff of Object.values(resData)) {
+            tariffData[1].push("£" + tariff.rate);
+        }
+        setShowTariffTable(!showTariffTable);
+        showTariffTable = !showTariffTable;
+        if (!showTariffTable) {
+            tariffData.length = 0;
+        }
+    };
+
+    const handleFetchStatistics = async () => {
+        setShowMeterReadings(false);
+        setShowTariffTable(false);
+        setAverageElectricityConsumptionDay(0);
+        setAverageElectricityConsumptionNight(0);
+        setAverageGasConsumption(0);
+        consumptionData.length = 0;
+        tariffData.length = 0;
+        consumptionData.push(["Type", "Consumption"]);
+        avgGasPerUser.push(["User (customer_id)", "Average Gas Consumption"]);
+        avgElectricityPerUser.push([
+            "User (customer_id)",
+            "Average Electricity Consumption",
+        ]);
         // Fetch the energy statistics from the server and set them in the state
-        // if (data) {
-        //     setAverageElectricityConsumption(true);
-        //     setAverageGasConsumption(true);
-        //     for (const key in data.readings.aakash_second[1]) {
-        //         if (
-        //             key === "elec_reading_day" ||
-        //             key === "elec_reading_night" ||
-        //             key === "gas"
-        //         ) {
-        //             consumptionData.push([
-        //                 key,
-        //                 data.readings.aakash_second[1][key],
-        //             ]);
-        //         }
-        //     }
-        //     console.log(consumptionData);
-        // }
+        try {
+            const res = await axios.get("/api/stats");
+            if (res) {
+                for (const type of Object.keys(res.data)) {
+                    if (type === "day") {
+                        setAverageElectricityConsumptionDay(
+                            averageElectricityConsumptionDay + res.data[type]
+                        );
+                        averageElectricityConsumptionDay += res.data[type];
+                    } else if (type === "night") {
+                        setAverageElectricityConsumptionNight(
+                            averageElectricityConsumptionNight + res.data[type]
+                        );
+                        averageElectricityConsumptionNight += res.data[type];
+                    } else {
+                        setAverageGasConsumption(
+                            averageGasConsumption + res.data[type]
+                        );
+                        averageGasConsumption += res.data[type];
+                    }
+                }
+                consumptionData.push([
+                    "electricity_day",
+                    averageElectricityConsumptionDay,
+                ]);
+                consumptionData.push([
+                    "electricity_night",
+                    averageElectricityConsumptionNight,
+                ]);
+                consumptionData.push(["gas", averageGasConsumption]);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        try {
+            const res = await axios.get("/api/stats/perUser");
+            if (res) {
+                for (const user of Object.keys(res.data)) {
+                    for (const type of Object.keys(res.data[user])) {
+                        if (type === "electricity") {
+                            avgElectricityPerUser.push([
+                                user,
+                                Math.round(res.data[user][type] / 31),
+                            ]);
+                        } else {
+                            avgGasPerUser.push([
+                                user,
+                                Math.round(res.data[user][type] / 31),
+                            ]);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+        setShowStatistics(!showStatistics);
+        showStatistics = !showStatistics;
+
+        if (!showStatistics) {
+            consumptionData.length = 0;
+            avgGasPerUser.length = 0;
+            avgElectricityPerUser.length = 0;
+        }
     };
 
     return user && user.user.type === "admin" ? (
@@ -147,7 +248,7 @@ function AdminHomePage() {
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
-                        mt: "auto",
+                        mt: "5rem",
                         mb: "auto",
                         minWidth: "300px",
                     }}
@@ -274,43 +375,186 @@ function AdminHomePage() {
                         >
                             Fetch Statistics
                         </Button>
-                        {averageElectricityConsumption && (
-                            <div>
-                                <p>Average Electricity Consumption:</p>
-                                <p>{averageElectricityConsumption}</p>
-                            </div>
-                        )}
-                        {averageGasConsumption && (
-                            <div>
-                                <p>Average Gas Consumption:</p>
-                                <p>{averageGasConsumption}</p>
-                            </div>
-                        )}
                         <Button
                             variant="contained"
                             onClick={handleFetchMeterReadings}
                         >
                             Fetch Meter Readings
                         </Button>
-                        <Button
-                            variant="contained"
-                            onClick={handleFetchMeterReadings}
-                        >
+                        <Button variant="contained" onClick={handleFetchTariff}>
                             View Tariff Prices
                         </Button>
-                        {/* {dataLoading ? (
-                            "loading"
-                        ) : (
-                            <Chart
-                                chartType="Table"
-                                data={readingsData}
-                                width="100%"
-                                height="400px"
-                                options={chartOptions}
-                                legendToggle
-                            />
-                        )} */}
                     </Grid>
+                    {showMeterReadings && readingsData.length < 1 ? (
+                        <Grid
+                            item
+                            xs={12}
+                            sx={{
+                                gap: "1rem",
+                                mb: "2rem",
+                                mt: "2rem",
+                            }}
+                        >
+                            <Typography component={"h1"} variant={"h3"}>
+                                No Meter Readings
+                            </Typography>
+                        </Grid>
+                    ) : (
+                        <Grid
+                            item
+                            xs={12}
+                            sx={{
+                                gap: "1rem",
+                                mb: "2rem",
+                                mt: "2rem",
+                                textAlign: "center",
+                                mr: "auto",
+                                ml: "auto",
+                            }}
+                        >
+                            {showMeterReadings && (
+                                <>
+                                    <Typography component={"h1"} variant={"h3"}>
+                                        Meter Readings
+                                    </Typography>
+                                    <Chart
+                                        chartType="Table"
+                                        data={readingsData}
+                                        width="100%"
+                                        height="400px"
+                                        style={{
+                                            color: "black",
+                                        }}
+                                    />
+                                </>
+                            )}
+                        </Grid>
+                    )}
+                    {showTariffTable && tariffData.length < 1 ? (
+                        <Grid
+                            item
+                            xs={12}
+                            sx={{
+                                gap: "1rem",
+                                mb: "2rem",
+                                mt: "2rem",
+                            }}
+                        >
+                            <Typography component={"h1"} variant={"h3"}>
+                                No Tariff Prices
+                            </Typography>
+                        </Grid>
+                    ) : (
+                        <Grid
+                            item
+                            xs={12}
+                            sx={{
+                                gap: "1rem",
+                                mb: "2rem",
+                                textAlign: "center",
+                            }}
+                        >
+                            {showTariffTable && (
+                                <>
+                                    <Typography component={"h1"} variant={"h3"}>
+                                        Tariff Prices
+                                    </Typography>
+                                    <Chart
+                                        chartType="Table"
+                                        data={tariffData}
+                                        minWidth={"50vw"}
+                                        height={"100px"}
+                                        style={{
+                                            color: "black",
+                                            border: "1px solid black",
+                                            borderRadius: "20px",
+                                        }}
+                                        loader={<div>Loading Chart</div>}
+                                    />
+                                </>
+                            )}
+                        </Grid>
+                    )}
+                    {showStatistics && consumptionData.length < 1 ? (
+                        <Grid
+                            item
+                            xs={12}
+                            sx={{
+                                gap: "1rem",
+                                mb: "2rem",
+                                mt: "2rem",
+                            }}
+                        >
+                            <Typography component={"h1"} variant={"h3"}>
+                                No Statistics
+                            </Typography>
+                        </Grid>
+                    ) : (
+                        showStatistics && (
+                            <Grid
+                                item
+                                xs={12}
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "1rem",
+                                    mb: "2rem",
+                                    textAlign: "center",
+                                    mr: "auto",
+                                    ml: "auto",
+                                }}
+                            >
+                                <Typography component={"h1"} variant={"h3"}>
+                                    Statistics
+                                </Typography>
+                                <Chart
+                                    width={"70vw"}
+                                    height={"400px"}
+                                    chartType="PieChart"
+                                    loader={<div>Loading Chart</div>}
+                                    data={consumptionData}
+                                    options={{
+                                        title: "Overall Consumption",
+                                        is3D: true,
+                                    }}
+                                    style={{
+                                        color: "black",
+                                        background: "transparent",
+                                    }}
+                                />
+                                <Chart
+                                    width={"70vw"}
+                                    height={"400px"}
+                                    chartType="PieChart"
+                                    loader={<div>Loading Chart</div>}
+                                    data={avgElectricityPerUser}
+                                    options={{
+                                        title: "Avg. Electricity Consumption per day",
+                                        is3D: true,
+                                    }}
+                                    style={{
+                                        color: "black",
+                                        background: "transparent",
+                                    }}
+                                />
+                                <Chart
+                                    width={"70vw"}
+                                    height={"400px"}
+                                    chartType="PieChart"
+                                    loader={<div>Loading Chart</div>}
+                                    data={avgGasPerUser}
+                                    options={{
+                                        title: "Avg. Gas Consumption per day",
+                                        is3D: true,
+                                    }}
+                                    style={{
+                                        color: "black",
+                                        background: "transparent",
+                                    }}
+                                />
+                            </Grid>
+                        )
+                    )}
                 </Grid>
             </Grid>
         </ThemeProvider>

@@ -433,6 +433,8 @@ export default function Dashboard() {
                     {showTariffChargesTable && (
                         <Grid
                             item
+                            xs={12}
+                            x
                             sx={{
                                 alignItems: "center",
                                 justifyContent: "center",
