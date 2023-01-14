@@ -52,6 +52,7 @@ function AdminHomePage() {
         setAverageElectricityConsumptionDay,
     ] = React.useState(0);
     let [averageGasConsumption, setAverageGasConsumption] = React.useState(0);
+    const [readingMessage, setReadingMessage] = React.useState("");
 
     const [errorCreatingTariff, setErrorCreatingTariff] = React.useState(false);
     const [successCreatingTariff, setSuccessCreatingTariff] =
@@ -60,7 +61,8 @@ function AdminHomePage() {
 
     const { user } = React.useContext(AuthContext);
 
-    const { data, dataError, dataLoading, refetch } = useFetch("/api/reading");
+    const { data, dataError, dataLoading } = useFetch("/api/reading");
+
     const handleSubmitPrices = async (event) => {
         event.preventDefault();
         const priceData = {
@@ -71,18 +73,25 @@ function AdminHomePage() {
         };
 
         let update = false;
-
+        let count = 0;
         for (const key in priceData) {
             if (priceData[key] === "") {
                 update = true;
+                count += 1;
             }
+        }
+        if (count === 4) {
+            setOpen(true);
+            setErrorCreatingTariff(false);
+            setSuccessCreatingTariff(true);
+            return;
         }
 
         try {
             if (update) {
-                const res = await axios.put("/api/tariff", priceData);
+                await axios.put("/api/tariff", priceData);
             } else {
-                const res = await axios.post("/api/tariff", priceData);
+                await axios.post("/api/tariff", priceData);
             }
             setElectricityPriceDay("");
             setElectricityPriceNight("");
@@ -107,7 +116,13 @@ function AdminHomePage() {
         consumptionData.length = 0;
         avgGasPerUser.length = 0;
         avgElectricityPerUser.length = 0;
-        // Fetch the meter readings from the server and set them in the state
+        tariffData.length = 0;
+        if (dataError) {
+            setReadingMessage("Error fetching meter readings, try again later");
+            return;
+        } else if (dataLoading) {
+            setReadingMessage("Loading meter readings...");
+        }
         const readingData = await data.readings;
         setShowMeterReadings(!showMeterReadings);
         if (!showMeterReadings) {
@@ -115,7 +130,24 @@ function AdminHomePage() {
         }
 
         if (readingData) {
-            readingsData.push(Object.keys(Object.values(readingData)[0][1]));
+            readingsData.push(
+                Object.keys(Object.values(readingData)[0][1]).map((key) => {
+                    if (key === "submission_date") {
+                        return "Date";
+                    } else if (key === "electricity_meter_reading_day") {
+                        return "Electricity Reading Day (kWh)";
+                    } else if (key === "electricity_meter_reading_night") {
+                        return "Electricity Reading Night (kWh)";
+                    } else if (key === "gas_meter_reading") {
+                        return "Gas Reading (kWh)";
+                    } else if (key === "status") {
+                        return "Status";
+                    } else {
+                        const string = key.replace(/_/g, " ");
+                        return string.charAt(0).toUpperCase() + string.slice(1);
+                    }
+                })
+            );
             for (const user of Object.values(readingData)) {
                 for (const reading of user) {
                     if (reading) {
@@ -425,6 +457,7 @@ function AdminHomePage() {
                                         style={{
                                             color: "black",
                                         }}
+                                        loader={readingMessage}
                                     />
                                 </>
                             )}

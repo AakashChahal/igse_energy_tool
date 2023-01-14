@@ -53,12 +53,20 @@ function Navbar() {
                         sx={{
                             color: "white",
                             marginLeft: "auto",
+                            textAlign: "center",
                         }}
                         variant="h6"
                     >
                         Welcome to your{" "}
                         {user?.user?.type === "admin" ? "Admin" : "Customer"}{" "}
-                        Homepage
+                        Dashboard
+                        {user?.user?.type === "customer" && (
+                            <>
+                                {" "}
+                                <br />
+                                {user?.user?.full_name}
+                            </>
+                        )}
                     </Typography>
 
                     <Button
