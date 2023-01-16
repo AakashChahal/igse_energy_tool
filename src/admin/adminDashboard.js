@@ -86,6 +86,17 @@ function AdminHomePage() {
             setSuccessCreatingTariff(false);
             setErrorMessage("Please enter at least one price");
             return;
+        } else if (
+            priceData.electricity_day < 0 ||
+            priceData.gas < 0 ||
+            priceData.standing < 0 ||
+            priceData.electricity_night < 0
+        ) {
+            setOpen(true);
+            setErrorCreatingTariff(true);
+            setSuccessCreatingTariff(false);
+            setErrorMessage("Please enter a positive price");
+            return;
         }
         for (const key in priceData) {
             if (priceData[key] === "") {
