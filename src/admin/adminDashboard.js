@@ -58,6 +58,7 @@ function AdminHomePage() {
     const [successCreatingTariff, setSuccessCreatingTariff] =
         React.useState(false);
     const [open, setOpen] = React.useState(true);
+    const [errorMessage, setErrorMessage] = React.useState("");
 
     const { user } = React.useContext(AuthContext);
 
@@ -74,6 +75,18 @@ function AdminHomePage() {
 
         let update = false;
         let count = 0;
+        if (
+            priceData.electricity_day === "" &&
+            priceData.electricity_night === "" &&
+            priceData.standing === "" &&
+            priceData.gas === ""
+        ) {
+            setOpen(true);
+            setErrorCreatingTariff(true);
+            setSuccessCreatingTariff(false);
+            setErrorMessage("Please enter at least one price");
+            return;
+        }
         for (const key in priceData) {
             if (priceData[key] === "") {
                 update = true;
@@ -104,6 +117,9 @@ function AdminHomePage() {
             setOpen(true);
             setErrorCreatingTariff(true);
             setSuccessCreatingTariff(false);
+            setErrorMessage(
+                "Error Creating/Updating the Tariff, Please try again"
+            );
         }
     };
 
@@ -319,8 +335,7 @@ function AdminHomePage() {
                                             </IconButton>
                                         }
                                     >
-                                        Error Creating/Updating the Tariff,
-                                        Please try again
+                                        {errorMessage}
                                     </Alert>
                                 </Collapse>
                             )}
