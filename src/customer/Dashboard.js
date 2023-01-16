@@ -12,15 +12,21 @@ import {
     Alert,
     Collapse,
     IconButton,
+    Card,
+    CardContent,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { deepPurple, cyan, teal } from "@mui/material/colors";
 import Navbar from "../components/Navbar";
 import { AuthContext } from "../context/AuthContext";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import useFetch from "../hooks/useFetch";
 import axios from "axios";
 import { Chart } from "react-google-charts";
+import "./payment.css";
+import validator from "validator";
+import { QrCodeScanner } from "@mui/icons-material";
+import QrScanner from "./QrScanner";
 
 const theme = createTheme({
     palette: {
@@ -79,12 +85,17 @@ export default function Dashboard() {
     const [billPaid, setBillPaid] = React.useState(false);
     const [billPaidMessage, setBillPaidMessage] = React.useState("");
     const [showBillMessage, setShowBillMessage] = React.useState(false);
+    const [showPaymentPage, setShowPaymentPage] = React.useState(false);
+    const [cardMessage, setCardMessage] = React.useState("");
+
+    const [voucherMessage, setVoucherMessage] = React.useState("");
+    const [showVoucherMessage, setShowVoucherMessage] = React.useState(false);
+
+    const [toggleScanner, setToggleScanner] = React.useState(false);
 
     let { data, refetch } = useFetch(`/api/reading/${user.user.customer_id}`);
     let reading_id = 0;
     const tariff = axios.get("/api/tariff");
-    // eslint-disable-next-line
-    const navigate = useNavigate();
 
     const calcLatestBill = async () => {
         if (data) {
@@ -216,7 +227,6 @@ export default function Dashboard() {
     };
 
     const handlePayLatestBill = async () => {
-        // Pay the latest bill using the credits available
         const credit = user?.user?.balance;
         const latestBill = latestUnpaidBillAmount;
         if (typeof latestBill === "string" || latestBill === 0) {
@@ -258,8 +268,84 @@ export default function Dashboard() {
         }
     };
 
-    const handleTopUpCredit = () => {
-        // Top up the credit with the specified EVC
+    const handlePayLatestBillCard = async (event) => {
+        const latestBill = latestUnpaidBillAmount;
+        const cardNumber = document.getElementById("cardNumber");
+        const expiryDate = document.getElementById("expDate");
+        const cvv = document.getElementById("cvv");
+        if (typeof latestBill === "string" || latestBill === 0) {
+            setShowPaymentPage(false);
+            setBillPaid(false);
+            setBillPaidMessage("No pending bills");
+            setShowBillMessage(true);
+            return;
+        } else if (
+            cardNumber.value === "" ||
+            expiryDate.value === "" ||
+            cvv.value === ""
+        ) {
+            return;
+        } else if (!validator.isCreditCard(cardNumber.value)) {
+            console.log(cardNumber.value);
+        } else if (expiryDate.value.length !== 5) {
+            console.log(expiryDate.value);
+        }
+        try {
+            data.reading[reading_id].status = "paid";
+            await axios.put(
+                `/api/reading/${user.user.customer_id}/${reading_id}`,
+                data.reading[reading_id]
+            );
+            setCardMessage("Payment Successful");
+            setTimeout(() => {
+                setShowPaymentPage(false);
+                setCardMessage("");
+                setLatestUnpaidBillAmount("No pending bills");
+                setBillPaid(true);
+                setBillPaidMessage("Bill Paid Successfully");
+            }, 2000);
+        } catch (error) {
+            setShowBillMessage(true);
+            setBillPaid(false);
+            setBillPaidMessage(
+                "Some Error Occurred, while paying the bill, please try again"
+            );
+            data.reading[reading_id].status = "pending";
+        }
+    };
+
+    const handleTopUpCredit = async () => {
+        if (evc === "") {
+            setShowVoucherMessage(true);
+            setTimeout(() => {
+                setShowVoucherMessage(false);
+            }, 2000);
+            setVoucherMessage("Please enter a voucher code");
+            return;
+        }
+        try {
+            await axios.post("/api/evc/verify", {
+                evc: evc,
+            });
+            await axios.post("/api/evc/use", {
+                evc: evc,
+            });
+            setShowVoucherMessage(true);
+            setTimeout(() => {
+                setShowVoucherMessage(false);
+            }, 2000);
+            setVoucherMessage("Voucher Redeemed Successfully");
+            user.user.balance = user.user.balance + 200;
+            await axios.put(`/api/users/${user.user.customer_id}`, user.user);
+            localStorage.setItem("user", JSON.stringify(user));
+            setEVC("");
+        } catch (err) {
+            setShowVoucherMessage(true);
+            setTimeout(() => {
+                setShowVoucherMessage(false);
+            }, 2000);
+            setVoucherMessage(err.response.data.message);
+        }
     };
 
     const showMeterReadings = async () => {
@@ -314,6 +400,15 @@ export default function Dashboard() {
         }
     };
 
+    const setQrData = (data) => {
+        setEVC(data);
+        document.getElementById("evc").focus();
+    };
+
+    const closeQRScanner = () => {
+        setToggleScanner(false);
+    };
+
     useEffect(() => {
         calcLatestBill();
         localStorage.setItem("user", JSON.stringify(user));
@@ -329,6 +424,174 @@ export default function Dashboard() {
             >
                 <Navbar />
                 <CssBaseline />
+                {showPaymentPage && (
+                    <Collapse in={showPaymentPage}>
+                        <Box
+                            sx={{
+                                alignItems: "center",
+                                justifyContent: "center",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 2,
+                            }}
+                        >
+                            <Card className={"card"}>
+                                {cardMessage && (
+                                    <Alert
+                                        severity="success"
+                                        sx={{
+                                            width: "100%",
+                                            textAlign: "center",
+                                            position: "absolute",
+                                            top: 0,
+                                        }}
+                                    >
+                                        {cardMessage}
+                                    </Alert>
+                                )}
+                                <IconButton
+                                    aria-label="close"
+                                    color="inherit"
+                                    size="small"
+                                    sx={{
+                                        position: "absolute",
+                                        right: 5,
+                                        top: 5,
+                                    }}
+                                    onClick={() => {
+                                        setShowPaymentPage(false);
+                                    }}
+                                >
+                                    <CloseIcon fontSize="inherit" />
+                                </IconButton>
+                                <CardContent>
+                                    <Typography
+                                        variant="h5"
+                                        component="div"
+                                        sx={{ textAlign: "center" }}
+                                    >
+                                        Pay your bill
+                                    </Typography>
+                                    <Typography
+                                        variant="h6"
+                                        component="div"
+                                        sx={{ textAlign: "center" }}
+                                    >
+                                        Your Bill Amount: £
+                                        {latestUnpaidBillAmount}
+                                    </Typography>
+
+                                    <FormControl
+                                        sx={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            width: "30rem",
+                                        }}
+                                    >
+                                        <TextField
+                                            label="Full Name"
+                                            fullWidth
+                                            margin="normal"
+                                        />
+                                        <TextField
+                                            label="Card number"
+                                            id="cardNumber"
+                                            fullWidth
+                                            margin="normal"
+                                            placeholder="xxxx xxxx xxxx xxxx"
+                                        />
+                                        <Grid
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                            }}
+                                        >
+                                            <TextField
+                                                label="Expiration date"
+                                                margin="normal"
+                                                id="expDate"
+                                                placeholder="MM/YY"
+                                                width="45%"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "/") {
+                                                        e.preventDefault();
+                                                    } else if (
+                                                        e.key === "Backspace" ||
+                                                        e.key === "Delete" ||
+                                                        e.key === "ArrowLeft" ||
+                                                        e.key === "ArrowRight"
+                                                    ) {
+                                                        return;
+                                                    } else if (
+                                                        e.key.match(/[a-zA-Z]/)
+                                                    ) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                onChange={(e) => {
+                                                    const date = e.target.value;
+                                                    if (
+                                                        date.length === 2 &&
+                                                        !date.includes("/")
+                                                    ) {
+                                                        e.target.value =
+                                                            date + "/";
+                                                    } else if (
+                                                        date.length === 3
+                                                    ) {
+                                                        e.target.value =
+                                                            date.slice(0, 2);
+                                                    } else if (
+                                                        date.length > 5
+                                                    ) {
+                                                        e.target.value =
+                                                            date.slice(0, 5);
+                                                    }
+                                                }}
+                                            />
+                                            <TextField
+                                                label="Security code"
+                                                margin="normal"
+                                                id="cvv"
+                                                placeholder="xxx"
+                                                width="45%"
+                                                onKeyDown={(e) => {
+                                                    if (
+                                                        e.key === "Backspace" ||
+                                                        e.key === "Delete" ||
+                                                        e.key === "ArrowLeft" ||
+                                                        e.key === "ArrowRight"
+                                                    ) {
+                                                        return;
+                                                    } else if (
+                                                        e.key.match(/[a-zA-Z]/)
+                                                    ) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                onChange={(e) => {
+                                                    const cvv = e.target.value;
+                                                    if (cvv.length > 3) {
+                                                        e.target.value =
+                                                            cvv.slice(0, 3);
+                                                    }
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            fullWidth
+                                            onClick={handlePayLatestBillCard}
+                                        >
+                                            Pay
+                                        </Button>
+                                    </FormControl>
+                                </CardContent>
+                            </Card>
+                        </Box>
+                    </Collapse>
+                )}
                 <Grid
                     item
                     xs={false}
@@ -339,6 +602,7 @@ export default function Dashboard() {
                         display: "flex",
                         flexDirection: "column",
                     }}
+                    className={showPaymentPage ? "blur" : ""}
                 >
                     <Grid item>
                         <Box
@@ -520,13 +784,31 @@ export default function Dashboard() {
                                 Credit Amount:{" "}
                                 <strong>£{user?.user?.balance}</strong>
                             </Typography>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handlePayLatestBill}
+                            <Box
+                                sx={{
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    display: "flex",
+                                    gap: 2,
+                                }}
                             >
-                                Pay
-                            </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={handlePayLatestBill}
+                                >
+                                    Pay Using Credit
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() =>
+                                        setShowPaymentPage(!showPaymentPage)
+                                    }
+                                >
+                                    Pay Using Card
+                                </Button>
+                            </Box>
                         </Box>
                     </Grid>
                     <Grid
@@ -551,13 +833,62 @@ export default function Dashboard() {
                             <Typography component="h1" variant="h3">
                                 Top Up Credit
                             </Typography>
-                            <TextField
-                                id="evc"
-                                label="EVC"
-                                type="number"
-                                value={evc}
-                                onChange={(event) => setEVC(event.target.value)}
-                            />
+                            {showVoucherMessage && (
+                                <Collapse in={showVoucherMessage}>
+                                    <Alert
+                                        severity="info"
+                                        action={
+                                            <IconButton
+                                                aria-label="close"
+                                                color="inherit"
+                                                size="small"
+                                                onClick={() => {
+                                                    setShowVoucherMessage(
+                                                        false
+                                                    );
+                                                }}
+                                            >
+                                                <CloseIcon fontSize="inherit" />
+                                            </IconButton>
+                                        }
+                                    >
+                                        {voucherMessage}
+                                    </Alert>
+                                </Collapse>
+                            )}
+                            <Grid item>
+                                <TextField
+                                    id="evc"
+                                    label="EVC"
+                                    value={evc}
+                                    onChange={(event) =>
+                                        setEVC(event.target.value)
+                                    }
+                                    InputLabelProps={
+                                        document.getElementById("evc")?.value
+                                            ?.length > 0
+                                            ? { shrink: true }
+                                            : {}
+                                    }
+                                />
+                                <QrCodeScanner
+                                    sx={{
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginTop: 2,
+                                        cursor: "pointer",
+                                    }}
+                                    onClick={() => {
+                                        setToggleScanner(!toggleScanner);
+                                    }}
+                                />
+                                {toggleScanner && (
+                                    <QrScanner
+                                        handleClose={closeQRScanner}
+                                        setQrData={setQrData}
+                                    />
+                                )}
+                            </Grid>
                             <Button
                                 variant="contained"
                                 color="primary"

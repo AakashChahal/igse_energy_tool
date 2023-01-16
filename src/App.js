@@ -10,7 +10,6 @@ import UserContext from "./context/userContext";
 import AdminSignIn from "./admin/AdminSignIn";
 import AdminHomePage from "./admin/adminDashboard";
 import PageNotFound from "./components/PageNotFound";
-import PaymentPage from "./components/Payment";
 
 function App() {
     const [currentUser, setCurrentUser] = useState(null);
@@ -23,10 +22,6 @@ function App() {
                     <Route path="/login" element={<SignIn />} />
                     <Route path="/register" element={<SignUp />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route
-                        path="/dashboard/payment"
-                        element={<PaymentPage />}
-                    />
                     <Route path="/forgot" element={<ForgotPassword />} />
                     <Route path="/admin" element={<AdminSignIn />} />
                     <Route path="/admin/login" element={<AdminSignIn />} />
